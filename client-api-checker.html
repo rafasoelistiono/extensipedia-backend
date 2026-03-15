@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client API Integration Checker</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel-alt: #f8fafc;
+      --text: #16202a;
+      --muted: #64748b;
+      --border: #d8e1ea;
+      --success: #166534;
+      --success-bg: #dcfce7;
+      --error: #b91c1c;
+      --error-bg: #fee2e2;
+      --warning: #92400e;
+      --warning-bg: #fef3c7;
+      --info: #1d4ed8;
+      --info-bg: #dbeafe;
+      --shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(180deg, #eef4ff 0%, var(--bg) 220px);
+      color: var(--text);
+    }
+
+    a {
+      color: #0f4db8;
+      word-break: break-all;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    .container {
+      width: min(1280px, calc(100% - 32px));
+      margin: 0 auto;
+      padding-bottom: 40px;
+    }
+
+    .sticky-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+      background: rgba(245, 247, 251, 0.88);
+      border-bottom: 1px solid rgba(216, 225, 234, 0.9);
+    }
+
+    .header-inner {
+      width: min(1280px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 18px 0;
+    }
+
+    .header-top {
+      display: flex;
+      gap: 16px;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .header-title {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .header-note {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 700px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .base-url-box,
+    .overall-status-box {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .overall-status-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .badge.idle {
+      color: #475569;
+      background: #e2e8f0;
+    }
+
+    .badge.loading {
+      color: var(--warning);
+      background: var(--warning-bg);
+    }
+
+    .badge.success {
+      color: var(--success);
+      background: var(--success-bg);
+    }
+
+    .badge.error {
+      color: var(--error);
+      background: var(--error-bg);
+    }
+
+    .badge.info {
+      color: var(--info);
+      background: var(--info-bg);
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 1px solid #c9d4e0;
+      background: #fff;
+      color: #0f172a;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.18s ease;
+      box-shadow: 0 1px 1px rgba(15, 23, 42, 0.02);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      background: #f8fafc;
+    }
+
+    .btn.primary {
+      background: #0f172a;
+      color: #fff;
+      border-color: #0f172a;
+    }
+
+    .btn.secondary {
+      background: #e2e8f0;
+      border-color: #e2e8f0;
+    }
+
+    .btn.small {
+      padding: 7px 10px;
+      font-size: 13px;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .page-sections {
+      display: grid;
+      gap: 18px;
+      margin-top: 22px;
+    }
+
+    .section-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .section-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .section-title-wrap h2 {
+      margin: 0 0 6px;
+      font-size: 20px;
+    }
+
+    .section-meta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    .section-endpoint {
+      font-family: Consolas, Monaco, monospace;
+      color: #334155;
+      font-size: 12px;
+      background: #eef2ff;
+      border: 1px solid #dbe4ff;
+      padding: 6px 8px;
+      border-radius: 8px;
+    }
+
+    .section-body {
+      padding: 18px;
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 16px;
+    }
+
+    .preview-box,
+    .json-box,
+    .sub-box {
+      border: 1px solid var(--border);
+      background: var(--panel-alt);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .box-title {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .preview-empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      color: #0f172a;
+    }
+
+    .field {
+      padding: 10px 0;
+      border-bottom: 1px dashed #d9e2ec;
+    }
+
+    .field:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 4px;
+    }
+
+    .field-value {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mini-card {
+      border: 1px solid #dbe3ee;
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .mini-card h4 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 8px 0 0;
+    }
+
+    .tag {
+      font-size: 12px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .image-preview {
+      margin-top: 12px;
+      width: 100%;
+      max-width: 280px;
+      border-radius: 12px;
+      border: 1px solid #dbe3ee;
+      display: block;
+    }
+
+    .iframe-wrap {
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .iframe-wrap iframe {
+      width: 100%;
+      min-height: 280px;
+      border: 0;
+    }
+
+    .inline-note {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      color: #475569;
+      font-size: 13px;
+    }
+
+    .inline-feedback {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      border: 1px solid transparent;
+    }
+
+    .inline-feedback.success {
+      background: var(--success-bg);
+      color: var(--success);
+      border-color: #bbf7d0;
+    }
+
+    .inline-feedback.error {
+      background: var(--error-bg);
+      color: var(--error);
+      border-color: #fecaca;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .form-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    .input,
+    .textarea,
+    .file-input,
+    .select {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      background: #fff;
+      color: #0f172a;
+      padding: 10px 12px;
+    }
+
+    .textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .success-ticket {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 12px;
+      background: #ecfdf5;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .filter-btn.active {
+      background: #0f172a;
+      color: #fff;
+      border-color: #0f172a;
+    }
+
+    .developer-notes {
+      margin-top: 24px;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .developer-notes h2 {
+      margin-top: 0;
+    }
+
+    .developer-notes ul {
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 920px) {
+      .grid-two {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="sticky-header">
+    <div class="header-inner">
+      <div class="header-top">
+        <div>
+          <h1 class="header-title">Client API Integration Checker</h1>
+          <p class="header-note">
+            Temporary integration checker for local backend-client verification only. This page is intentionally simple and easy to edit.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button id="fetchAllBtn" class="btn primary">Fetch All GET APIs</button>
+          <button id="clearAllBtn" class="btn secondary">Clear All</button>
+        </div>
+      </div>
+      <div class="base-url-box">
+        <strong>API Base URL:</strong>
+        <span id="apiBaseUrlText"></span>
+      </div>
+      <div class="overall-status-box">
+        <div>
+          <strong>Overall Integration Status</strong>
+          <div class="header-note" style="margin-top: 4px;">Calculated from GET section fetch results on this page.</div>
+        </div>
+        <div class="badge idle" id="overallStatusBadge">Not checked yet</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-sections">
+      <section class="section-card" data-section="hero">
+        <div class="section-head">
+          <div class="section-title-wrap">
+            <h2>1. HERO</h2>
+            <div class="section-endpoint" data-endpoint-label></div>
+            <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
+          </div>
+          <div class="button-row"><button class="btn small primary" data-fetch-btn>Fetch</button></div>
+        </div>
+        <div class="section-body grid-two">
+          <div class="preview-box"><h3 class="box-title">Preview</h3><div data-preview></div></div>
+          <div class="json-box"><h3 class="box-title">Raw JSON</h3><pre data-json>Not fetched yet.</pre></div>
+        </div>
+      </section>
+
+      <section class="section-card" data-section="about">
+        <div class="section-head">
+          <div class="section-title-wrap">
+            <h2>2. TENTANG KAMI</h2>
+            <div class="section-endpoint" data-endpoint-label></div>
+            <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
+          </div>
+          <div class="button-row"><button class="btn small primary" data-fetch-btn>Fetch</button></div>
+        </div>
+        <div class="section-body grid-two">
+          <div class="preview-box"><h3 class="box-title">Preview</h3><div data-preview></div></div>
+          <div class="json-box"><h3 class="box-title">Raw JSON</h3><pre data-json>Not fetched yet.</pre></div>
+        </div>
+      </section>
+
+      <section class="section-card" data-section="quickDownloads">
+        <div class="section-head">
+          <div class="section-title-wrap">
+            <h2>3. AKADEMIK - QUICK DOWNLOAD</h2>
+            <div class="section-endpoint" data-endpoint-label></div>
+            <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
+          </div>
+          <div class="button-row"><button class="btn small primary" data-fetch-btn>Fetch</button></div>
+        </div>
+        <div class="section-body grid-two">
+          <div class="preview-box"><h3 class="box-title">Preview</h3><div data-preview></div></div>
+          <div class="json-box"><h3 class="box-title">Raw JSON</h3><pre data-json>Not fetched yet.</pre></div>
+        </div>
+      </section>
+
+      <section class="section-card" data-section="repositories">
+        <div class="section-head">
+          <div class="section-title-wrap">
+            <h2>4. AKADEMIK - REPOSITORY BAHAN KULIAH</h2>
+            <div class="section-endpoint" data-endpoint-label></div>
+            <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
+          </div>
+          <div class="button-row"><button class="btn small primary" data-fetch-btn>Fetch</button></div>
+        </div>
+        <div class="section-body grid-two">
+          <div class="preview-box"><h3 class="box-title">Preview</h3><div data-preview></div></div>
+          <div class="json-box"><h3 class="box-title">Raw JSON</h3><pre data-json>Not fetched yet.</pre></div>
+        </div>
+      </section>
+
+      <section class="section-card" data-section="youtube">
+        <div class="section-head">
+          <div class="section-title-wrap">
+            <h2>5. AKADEMIK - YOUTUBE</h2>
+            <div class="section-endpoint" data-endpoint-label></div>
+            <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
+          </div>
+          <div class="button-row"><button class="btn small primary" data-fetch-btn>Fetch</button></div>
+        </div>
+        <div class="section-body grid-two">
+          <div class="preview-box"><h3 class="box-title">Preview</h3><div data-preview></div></div>
+          <div class="json-box"><h3 class="box-title">Raw JSON</h3><pre data-json>Not fetched yet.</pre></div>
+        </div>
+      </section>
+
+      <section class="section-card" data-section="countdowns">
+        <div class="section-head">
+          <div class="section-title-wrap">
+            <h2>6. AKADEMIK - EVENT COUNTDOWN</h2>
+            <div class="section-endpoint" data-endpoint-label></div>
+            <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
+          </div>
+          <div class="button-row"><button class="btn small primary" data-fetch-btn>Fetch</button></div>
+        </div>
+        <div class="section-body grid-two">
+          <div class="preview-box"><h3 class="box-title">Preview</h3><div data-preview></div></div>
+          <div class="json-box"><h3 class="box-title">Raw JSON</h3><pre data-json>Not fetched yet.</pre></div>
+        </div>
+      </section>
+
+      <section class="section-card" data-section="competency">
+        <div class="section-head">
+          <div class="section-title-wrap">
+            <h2>7. KOMPETENSI</h2>
+            <div class="section-endpoint" data-endpoint-label></div>
+            <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
+          </div>
+          <div class="button-row"><button class="btn small primary" data-fetch-btn>Fetch</button></div>
+        </div>
+        <div class="section-body grid-two">
+          <div class="preview-box">
+            <h3 class="box-title">Preview</h3>
+            <div class="filter-row">
+              <button class="btn small filter-btn active" data-competency-filter="all">All</button>
+              <button class="btn small filter-btn" data-competency-filter="gratis">Gratis</button>
+              <button class="btn small filter-btn" data-competency-filter="berbayar">Berbayar</button>
+              <button class="btn small filter-btn" data-competency-filter="nasional">Nasional</button>
+              <button class="btn small filter-btn" data-competency-filter="internasional">Internasional</button>
+            </div>
+            <div data-preview></div>
+          </div>
+          <div class="json-box"><h3 class="box-title">Raw JSON</h3><pre data-json>Not fetched yet.</pre></div>
+        </div>
+      </section>
+
+      <section class="section-card" data-section="career">
+        <div class="section-head">
+          <div class="section-title-wrap">
+            <h2>8. KARIR</h2>
+            <div class="section-endpoint" data-endpoint-label></div>
+            <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
+          </div>
+          <div class="button-row"><button class="btn small primary" data-fetch-btn>Fetch</button></div>
+        </div>
+        <div class="section-body grid-two">
+          <div class="preview-box"><h3 class="box-title">Preview</h3><div data-preview></div></div>
+          <div class="json-box"><h3 class="box-title">Raw JSON</h3><pre data-json>Not fetched yet.</pre></div>
+        </div>
+      </section>
+
+      <section class="section-card" data-section="aspirations">
+        <div class="section-head">
+          <div class="section-title-wrap">
+            <h2>9. ASPIRASI FEATURED</h2>
+            <div class="section-endpoint" data-endpoint-label></div>
+            <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
+          </div>
+          <div class="button-row"><button class="btn small primary" data-fetch-btn>Fetch</button></div>
+        </div>
+        <div class="section-body grid-two">
+          <div class="preview-box"><h3 class="box-title">Preview</h3><div data-preview></div></div>
+          <div class="json-box">
+            <h3 class="box-title">Raw JSON</h3>
+            <pre data-json>Not fetched yet.</pre>
+            <div id="aspirationActionFeedback" class="inline-feedback" style="display:none;"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-card" id="submitTesterSection">
+        <div class="section-head">
+          <div class="section-title-wrap">
+            <h2>10. ASPIRASI SUBMIT TESTER</h2>
+            <div class="section-endpoint" id="submitEndpointLabel"></div>
+            <div class="section-meta"><span class="badge idle" id="submitStatusBadge">Idle</span><span id="submitLastFetched">Last successful submit: -</span></div>
+          </div>
+        </div>
+        <div class="section-body grid-two">
+          <div class="preview-box">
+            <h3 class="box-title">Form</h3>
+            <div class="inline-note">Temporary integration test form for aspiration submission</div>
+            <form id="aspirationSubmitForm" class="form-grid" novalidate>
+              <div><label class="field-label" for="submitFullName">Full Name</label><input class="input" id="submitFullName" name="full_name" type="text" required /></div>
+              <div><label class="field-label" for="submitNpm">NPM</label><input class="input" id="submitNpm" name="npm" type="text" required /></div>
+              <div><label class="field-label" for="submitEmail">Email</label><input class="input" id="submitEmail" name="email" type="email" required /></div>
+              <div><label class="field-label" for="submitTitle">Title</label><input class="input" id="submitTitle" name="title" type="text" required /></div>
+              <div class="full"><label class="field-label" for="submitDescription">Short Description</label><textarea class="textarea" id="submitDescription" name="short_description" required></textarea></div>
+              <div class="full"><label class="field-label" for="submitAttachment">Evidence Attachment</label><input class="file-input" id="submitAttachment" name="evidence_attachment" type="file" accept="image/*,application/pdf" /></div>
+              <div class="full button-row">
+                <button type="submit" class="btn primary" id="submitAspirationBtn">Submit Test Request</button>
+                <button type="button" class="btn secondary" id="resetSubmitFormBtn">Reset Form</button>
+              </div>
+            </form>
+            <div id="submitFeedback" class="inline-feedback" style="display:none;"></div>
+            <div id="submitTicketBox" class="success-ticket" style="display:none;"></div>
+          </div>
+          <div class="json-box"><h3 class="box-title">Raw JSON</h3><pre id="submitJson">No submission made yet.</pre></div>
+        </div>
+      </section>
+
+      <section class="section-card" id="trackTesterSection">
+        <div class="section-head">
+          <div class="section-title-wrap">
+            <h2>11. LACAK TIKET TESTER</h2>
+            <div class="section-endpoint" id="trackEndpointLabel"></div>
+            <div class="section-meta"><span class="badge idle" id="trackStatusBadge">Idle</span><span id="trackLastFetched">Last successful fetch: -</span></div>
+          </div>
+          <div class="button-row"><button class="btn small primary" id="trackTicketBtn">Fetch Ticket</button></div>
+        </div>
+        <div class="section-body grid-two">
+          <div class="preview-box">
+            <h3 class="box-title">Preview</h3>
+            <div style="display:grid; gap:12px;">
+              <div><label class="field-label" for="trackTicketInput">Ticket ID</label><input class="input" id="trackTicketInput" type="text" placeholder="e.g. ASP-ABCDEF1234" /></div>
+              <div id="trackPreview"></div>
+            </div>
+          </div>
+          <div class="json-box"><h3 class="box-title">Raw JSON</h3><pre id="trackJson">No ticket lookup yet.</pre></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="developer-notes">
+      <h2>Developer Notes</h2>
+      <ul>
+        <li>This page is temporary.</li>
+        <li>It exists only to validate integration of GET and POST APIs.</li>
+        <li>It is safe to delete after backend-client integration is confirmed.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE_URL = "http://127.0.0.1:8000";
+    const endpoints = {
+      hero: "/api/v1/public/hero",
+      about: "/api/v1/public/about",
+      quickDownloads: "/api/v1/public/academic/quick-downloads",
+      repositories: "/api/v1/public/academic/repositories",
+      youtube: "/api/v1/public/academic/youtube",
+      countdowns: "/api/v1/public/academic/countdowns",
+      competency: "/api/v1/public/competency/agendas",
+      career: "/api/v1/public/career/resources",
+      aspirations: "/api/v1/public/aspirations/featured",
+      submitAspiration: "/api/v1/public/aspirations/submit",
+      trackTicket: "/api/v1/public/tickets/track",
+      upvoteAspiration: (id) => `/api/v1/public/aspirations/${id}/upvote`,
+      voteAspiration: (id) => `/api/v1/public/aspirations/${id}/vote`
+    };
+
+    const fallbackEndpoints = {
+      hero: ["/api/v1/public/about/hero/"],
+      about: ["/api/v1/public/about/tentang-kami/"],
+      quickDownloads: ["/api/v1/public/academic/quick-downloads/"],
+      repositories: ["/api/v1/public/academic/repository/"],
+      youtube: ["/api/v1/public/academic/youtube/"],
+      countdowns: ["/api/v1/public/academic/countdown-events/"],
+      competency: ["/api/v1/public/competency/agenda-cards/"],
+      career: ["/api/v1/public/career/resources/"],
+      aspirations: ["/api/v1/public/aspirations/featured/"],
+      submitAspiration: ["/api/v1/public/aspirations/submit/"],
+      trackTicket: ["/api/v1/public/tickets/track/"]
+    };
+
+    const sectionConfigs = {
+      hero: { title: "Hero", method: "GET" },
+      about: { title: "Tentang Kami", method: "GET" },
+      quickDownloads: { title: "Quick Downloads", method: "GET" },
+      repositories: { title: "Repositories", method: "GET" },
+      youtube: { title: "YouTube", method: "GET" },
+      countdowns: { title: "Countdowns", method: "GET" },
+      competency: { title: "Competency", method: "GET" },
+      career: { title: "Career", method: "GET" },
+      aspirations: { title: "Featured Aspirations", method: "GET" }
+    };
+
+    const sectionState = {};
+    let competencyItemsCache = [];
+    let competencyActiveFilter = "all";
+
+    document.getElementById("apiBaseUrlText").textContent = API_BASE_URL;
+    document.getElementById("submitEndpointLabel").textContent = `${API_BASE_URL}${endpoints.submitAspiration}`;
+    document.getElementById("trackEndpointLabel").textContent = `${API_BASE_URL}${endpoints.trackTicket}?ticket_id=...`;
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function createField(label, value) {
+      return `
+        <div class="field">
+          <span class="field-label">${escapeHtml(label)}</span>
+          <div class="field-value">${value == null || value === "" ? '<span class="preview-empty">N/A</span>' : value}</div>
+        </div>
+      `;
+    }
+
+    function setStatus(target, type, message) {
+      if (!target) return;
+      target.className = `badge ${type}`;
+      target.textContent = message;
+    }
+
+    function renderJson(container, data) {
+      if (!container) return;
+      try {
+        container.textContent = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+      } catch (error) {
+        container.textContent = `Unable to render JSON: ${error.message}`;
+      }
+    }
+
+    function unwrapData(payload) {
+      if (payload == null) return null;
+      if (payload && typeof payload === "object") {
+        if (Object.prototype.hasOwnProperty.call(payload, "data")) return payload.data;
+        if (Object.prototype.hasOwnProperty.call(payload, "results")) return payload.results;
+      }
+      return payload;
+    }
+
+    function getItemsCollection(value) {
+      const unwrapped = unwrapData(value);
+      if (Array.isArray(unwrapped)) return unwrapped;
+      if (unwrapped && Array.isArray(unwrapped.items)) return unwrapped.items;
+      if (unwrapped && Array.isArray(unwrapped.results)) return unwrapped.results;
+      return [];
+    }
+
+    function fullUrl(path) {
+      return `${API_BASE_URL}${path}`;
+    }
+
+    async function fetchJson(url, options = {}) {
+      const response = await fetch(url, {
+        mode: "cors",
+        credentials: "omit",
+        headers: {
+          Accept: "application/json",
+          ...(options.headers || {})
+        },
+        ...options
+      });
+
+      const contentType = response.headers.get("content-type") || "";
+      let payload = null;
+
+      try {
+        if (contentType.includes("application/json")) {
+          payload = await response.json();
+        } else {
+          payload = { rawText: await response.text() };
+        }
+      } catch (error) {
+        throw { status: response.status, message: `Failed to parse response JSON: ${error.message}`, payload: null };
+      }
+
+      if (!response.ok) {
+        throw {
+          status: response.status,
+          message: payload?.message || payload?.detail || response.statusText || "Request failed",
+          payload
+        };
+      }
+
+      return { status: response.status, payload };
+    }
+
+    function updateOverallStatus() {
+      const overallBadge = document.getElementById("overallStatusBadge");
+      const states = Object.keys(sectionConfigs).map((key) => sectionState[key]?.statusType || "idle");
+
+      if (states.every((item) => item === "idle")) return setStatus(overallBadge, "idle", "Not checked yet");
+      if (states.some((item) => item === "error")) return setStatus(overallBadge, "error", "Some GET checks failed");
+      if (states.some((item) => item === "loading")) return setStatus(overallBadge, "loading", "Checking APIs...");
+      if (states.every((item) => item === "success")) return setStatus(overallBadge, "success", "All GET checks succeeded");
+      setStatus(overallBadge, "info", "Partially checked");
+    }
+
+    function setSectionTimestamp(elements) {
+      if (!elements.lastFetched) return;
+      elements.lastFetched.textContent = `Last successful fetch: ${new Date().toLocaleString()}`;
+    }
+
+    function getSectionElements(sectionKey) {
+      const root = document.querySelector(`[data-section="${sectionKey}"]`);
+      return {
+        root,
+        preview: root?.querySelector("[data-preview]"),
+        json: root?.querySelector("[data-json]"),
+        statusBadge: root?.querySelector("[data-status-badge]"),
+        endpointLabel: root?.querySelector("[data-endpoint-label]"),
+        fetchButton: root?.querySelector("[data-fetch-btn]"),
+        lastFetched: root?.querySelector("[data-last-fetched]")
+      };
+    }
+
+    function normalizeSectionData(sectionKey, data) {
+      const raw = unwrapData(data);
+      switch (sectionKey) {
+        case "hero":
+        case "about":
+        case "youtube":
+        case "career":
+          return raw && raw.items && !Array.isArray(raw.items) ? raw.items : raw;
+        case "quickDownloads":
+        case "countdowns":
+        case "competency":
+        case "aspirations":
+          return getItemsCollection(raw);
+        case "repositories":
+          return raw && raw.items && !Array.isArray(raw.items) ? raw.items : raw;
+        default:
+          return raw;
+      }
+    }
+
+    function extractImageUrl(item) {
+      return item?.image || item?.logo || item?.thumbnail || item?.photo || null;
+    }
+
+    function renderHeroPreview(data) {
+      if (!data || typeof data !== "object") return '<div class="preview-empty">No hero data</div>';
+      const imageUrl = extractImageUrl(data);
+      return `
+        ${createField("Title", escapeHtml(data.title || "Untitled"))}
+        ${createField("Subtitle", escapeHtml(data.subtitle || ""))}
+        ${createField("Description", escapeHtml(data.description || ""))}
+        ${imageUrl ? `<img class="image-preview" src="${escapeHtml(imageUrl)}" alt="Hero image" />` : '<div class="inline-note">No image</div>'}
+      `;
+    }
+
+    function renderAboutPreview(data) {
+      if (!data || typeof data !== "object") return '<div class="preview-empty">No about data</div>';
+      const imageUrl = extractImageUrl(data);
+      return `
+        ${createField("Title", escapeHtml(data.title || "Untitled"))}
+        ${createField("Subtitle", escapeHtml(data.subtitle || ""))}
+        ${createField("Description", escapeHtml(data.description || ""))}
+        ${imageUrl ? `<img class="image-preview" src="${escapeHtml(imageUrl)}" alt="About image" />` : '<div class="inline-note">No image</div>'}
+      `;
+    }
+
+    function renderQuickDownloadsPreview(items) {
+      if (!Array.isArray(items) || items.length === 0) return '<div class="preview-empty">No quick download items</div>';
+      return `<div class="list">${items.slice(0, 5).map((item) => {
+        const link = item.resource_url || item.url || item.file || item.external_url || null;
+        const type = item.resource_type || item.type || (item.file ? "file" : "link");
+        return `
+          <div class="mini-card">
+            <h4>${escapeHtml(item.title || "Untitled")}</h4>
+            ${createField("Type", escapeHtml(type || "unknown"))}
+            ${createField("Link", link ? `<a href="${escapeHtml(link)}" target="_blank" rel="noopener">Open resource</a>` : '<span class="preview-empty">No file/url</span>')}
+          </div>
+        `;
+      }).join("")}</div>`;
+    }
+
+    function renderRepositoriesPreview(data) {
+      const source = data && typeof data === "object" ? data : {};
+      const akuntansi = Array.isArray(source.akuntansi) ? source.akuntansi : [];
+      const manajemen = Array.isArray(source.manajemen) ? source.manajemen : [];
+      const renderGroup = (label, items) => `
+        <div class="mini-card">
+          <h4>${label}</h4>
+          ${items.length ? items.slice(0, 3).map((item) => `
+            <div class="field">
+              <span class="field-label">${escapeHtml(item.title || "Untitled")}</span>
+              <div class="field-value">${item.google_drive_link ? `<a href="${escapeHtml(item.google_drive_link)}" target="_blank" rel="noopener">Open Google Drive Link</a>` : '<span class="preview-empty">No link</span>'}</div>
+            </div>
+          `).join("") : '<div class="preview-empty">No items</div>'}
+        </div>
+      `;
+      return `<div class="list">${renderGroup("Akuntansi", akuntansi)}${renderGroup("Manajemen", manajemen)}</div>`;
+    }
+
+    function extractEmbeddableUrl(value) {
+      if (!value || typeof value !== "string") return null;
+      if (value.startsWith("http://") || value.startsWith("https://")) return value;
+      const iframeMatch = value.match(/src=["']([^"']+)["']/i);
+      return iframeMatch ? iframeMatch[1] : null;
+    }
+
+    function renderYoutubePreview(data) {
+      if (!data || typeof data !== "object") return '<div class="preview-empty">No YouTube data</div>';
+      const rawValue = data.embed_url || data.iframe || data.embed_code || data.url || "";
+      const embeddableUrl = extractEmbeddableUrl(rawValue);
+      return `
+        ${createField("Title", escapeHtml(data.title || "YouTube"))}
+        ${createField("Embed Value", escapeHtml(rawValue || "No embed value"))}
+        ${embeddableUrl ? `<div class="iframe-wrap"><iframe src="${escapeHtml(embeddableUrl)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div>` : '<div class="inline-note">Value is not embeddable. Showing text only.</div>'}
+      `;
+    }
+
+    function getCountdownText(targetDateTime) {
+      if (!targetDateTime) return "No target datetime";
+      const target = new Date(targetDateTime);
+      if (Number.isNaN(target.getTime())) return "Invalid datetime";
+      const diff = target.getTime() - Date.now();
+      if (diff <= 0) return "Expired";
+      const totalMinutes = Math.floor(diff / 60000);
+      const days = Math.floor(totalMinutes / (60 * 24));
+      const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+      const minutes = totalMinutes % 60;
+      return `${days}d ${hours}h ${minutes}m remaining`;
+    }
+
+    function renderCountdownsPreview(items) {
+      if (!Array.isArray(items) || items.length === 0) return '<div class="preview-empty">No countdown events</div>';
+      return `<div class="list">${items.map((item) => `
+        <div class="mini-card">
+          <h4>${escapeHtml(item.title || "Untitled event")}</h4>
+          ${createField("Target Datetime", escapeHtml(item.target_datetime || "N/A"))}
+          ${createField("Countdown", escapeHtml(getCountdownText(item.target_datetime)))}
+        </div>
+      `).join("")}</div>`;
+    }
+
+    function filterCompetencyItems(items, filterKey) {
+      if (filterKey === "all") return items;
+      return items.filter((item) => {
+        const pricing = String(item.pricing_tag || "").toLowerCase();
+        const scope = String(item.scope_tag || "").toLowerCase();
+        return pricing === filterKey || scope === filterKey;
+      });
+    }
+
+    function renderCompetencyPreview(items) {
+      const filtered = filterCompetencyItems(Array.isArray(items) ? items : [], competencyActiveFilter);
+      if (!filtered.length) return '<div class="preview-empty">No competency agenda items for this filter</div>';
+      return `<div class="list">${filtered.map((item) => `
+        <div class="mini-card">
+          <h4>${escapeHtml(item.title || "Untitled agenda")}</h4>
+          <div>${escapeHtml(item.short_description || "")}</div>
+          <div class="tag-row">
+            <span class="tag">${escapeHtml(item.urgency_tag || "urgency")}</span>
+            <span class="tag">${escapeHtml(item.recommendation_tag || "recommendation")}</span>
+            <span class="tag">${escapeHtml(item.category_tag || "category")}</span>
+            <span class="tag">${escapeHtml(item.scope_tag || "scope")}</span>
+            <span class="tag">${escapeHtml(item.pricing_tag || "pricing")}</span>
+          </div>
+          ${createField("Deadline", escapeHtml(item.deadline_date || "N/A"))}
+          ${createField("Countdown Days", escapeHtml(item.countdown_days ?? "N/A"))}
+          ${createField("Registration", item.registration_link ? `<a href="${escapeHtml(item.registration_link)}" target="_blank" rel="noopener">Open registration link</a>` : '<span class="preview-empty">No registration link</span>')}
+        </div>
+      `).join("")}</div>`;
+    }
+
+    function renderCareerPreview(data) {
+      if (!data || typeof data !== "object") return '<div class="preview-empty">No career resources</div>';
+      const fields = [
+        ["CV Templates", data.cv_templates || data?.resources?.cv_templates],
+        ["Cover Letter", data.cover_letter || data?.resources?.cover_letter],
+        ["Portfolio Guide", data.portfolio_guide || data?.resources?.portfolio_guide],
+        ["Salary Script", data.salary_script || data?.resources?.salary_script],
+        ["Case Study Interview Prep", data.case_study_interview_prep]
+      ];
+      return `<div class="list">${fields.map(([label, link]) => `
+        <div class="mini-card">
+          <h4>${escapeHtml(label)}</h4>
+          ${link ? `<a href="${escapeHtml(link)}" target="_blank" rel="noopener">Open link</a>` : '<div class="preview-empty">No link</div>'}
+        </div>
+      `).join("")}</div>`;
+    }
+
+    function renderAspirationsPreview(items) {
+      if (!Array.isArray(items) || items.length === 0) return '<div class="preview-empty">No featured aspirations</div>';
+      return `<div class="list">${items.slice(0, 6).map((item) => {
+        const senderName = String(item.visibility || "").toLowerCase() === "public" ? (item.sender_name || "N/A") : null;
+        return `
+          <div class="mini-card">
+            <h4>${escapeHtml(item.title || "Untitled aspiration")}</h4>
+            ${createField("Aspiration ID", escapeHtml(item.id || item.uuid || "N/A"))}
+            ${createField("Short Description", escapeHtml(item.short_description || ""))}
+            ${createField("Visibility", escapeHtml(item.visibility || "N/A"))}
+            ${createField("Sender Name", senderName ? escapeHtml(senderName) : '<span class="preview-empty">Hidden for anonymous visibility</span>')}
+            ${createField("Status", escapeHtml(item.status || "N/A"))}
+            ${createField("Upvotes", escapeHtml(item.upvote_count ?? 0))}
+            ${createField("Votes", escapeHtml(item.vote_count ?? 0))}
+            <div class="button-row" style="margin-top:12px;">
+              <button class="btn small primary" data-aspiration-action="upvote" data-aspiration-id="${escapeHtml(item.id || "")}">Upvote</button>
+              <button class="btn small secondary" data-aspiration-action="vote" data-aspiration-id="${escapeHtml(item.id || "")}">Vote</button>
+            </div>
+          </div>
+        `;
+      }).join("")}</div>`;
+    }
+
+    function renderTrackingPreview(data) {
+      if (!data || (typeof data === "object" && Object.values(data).every((value) => value == null || value === ""))) {
+        return '<div class="preview-empty">Empty state. Enter a ticket ID to check progress.</div>';
+      }
+      return `
+        ${createField("Ticket ID", escapeHtml(data.ticket_id || "N/A"))}
+        ${createField("Title", escapeHtml(data.title || "N/A"))}
+        ${createField("Status", escapeHtml(data.status || "N/A"))}
+        ${createField("Submitted At", escapeHtml(data.submitted_at || data.created_at || "N/A"))}
+        ${createField("Updated At", escapeHtml(data.updated_at || "N/A"))}
+        ${createField("Visibility", escapeHtml(data.visibility || "N/A"))}
+        ${createField("Short Description", escapeHtml(data.short_description || ""))}
+      `;
+    }
+
+    function renderSectionPreview(sectionKey, normalizedData) {
+      switch (sectionKey) {
+        case "hero": return renderHeroPreview(normalizedData);
+        case "about": return renderAboutPreview(normalizedData);
+        case "quickDownloads": return renderQuickDownloadsPreview(normalizedData);
+        case "repositories": return renderRepositoriesPreview(normalizedData);
+        case "youtube": return renderYoutubePreview(normalizedData);
+        case "countdowns": return renderCountdownsPreview(normalizedData);
+        case "competency": return renderCompetencyPreview(normalizedData);
+        case "career": return renderCareerPreview(normalizedData);
+        case "aspirations": return renderAspirationsPreview(normalizedData);
+        default: return '<div class="preview-empty">No renderer for this section. See raw JSON.</div>';
+      }
+    }
+
+    async function fetchSection(endpointKey, stateElements, options = {}) {
+      const configuredPath = endpoints[endpointKey];
+      const candidates = [configuredPath, ...(fallbackEndpoints[endpointKey] || [])].filter(Boolean);
+
+      setStatus(stateElements.statusBadge, "loading", "Loading...");
+      sectionState[endpointKey] = { statusType: "loading" };
+      updateOverallStatus();
+      if (stateElements.fetchButton) stateElements.fetchButton.disabled = true;
+
+      let lastError = null;
+      for (const candidate of candidates) {
+        try {
+          stateElements.endpointLabel.textContent = fullUrl(candidate);
+          const result = await fetchJson(fullUrl(candidate), options);
+          renderJson(stateElements.json, result.payload);
+          const normalized = normalizeSectionData(endpointKey, result.payload);
+          stateElements.preview.innerHTML = renderSectionPreview(endpointKey, normalized);
+          setStatus(stateElements.statusBadge, "success", `Success (${result.status})`);
+          setSectionTimestamp(stateElements);
+          sectionState[endpointKey] = { statusType: "success", payload: result.payload, normalized };
+          if (endpointKey === "competency") competencyItemsCache = Array.isArray(normalized) ? normalized : [];
+          updateOverallStatus();
+          if (stateElements.fetchButton) stateElements.fetchButton.disabled = false;
+          return result;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      renderJson(stateElements.json, lastError?.payload || { error: lastError?.message || "Unknown error" });
+      stateElements.preview.innerHTML = `<div class="preview-empty">Failed to fetch section. ${escapeHtml(lastError?.message || "Unknown error")}</div>`;
+      setStatus(stateElements.statusBadge, "error", `Error${lastError?.status ? ` (${lastError.status})` : ""}`);
+      sectionState[endpointKey] = { statusType: "error", payload: lastError?.payload || null };
+      updateOverallStatus();
+      if (stateElements.fetchButton) stateElements.fetchButton.disabled = false;
+      return null;
+    }
+
+    function clearGetSection(sectionKey) {
+      const elements = getSectionElements(sectionKey);
+      elements.preview.innerHTML = '<div class="preview-empty">Cleared.</div>';
+      renderJson(elements.json, "Cleared.");
+      elements.lastFetched.textContent = "Last successful fetch: -";
+      setStatus(elements.statusBadge, "idle", "Idle");
+      sectionState[sectionKey] = { statusType: "idle" };
+    }
+
+    function findTicketId(payload) {
+      const sources = [payload, payload?.data, payload?.data?.data, payload?.result, payload?.results];
+      for (const source of sources) {
+        if (source && typeof source === "object" && source.ticket_id) return source.ticket_id;
+      }
+      return null;
+    }
+
+    async function postJsonWithFallback(url) {
+      try {
+        return await fetchJson(url, { method: "POST" });
+      } catch (firstError) {
+        if (firstError?.status && ![400, 415].includes(firstError.status)) throw firstError;
+        return await fetchJson(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}"
+        });
+      }
+    }
+
+    function showInlineFeedback(element, type, message) {
+      element.style.display = "block";
+      element.className = `inline-feedback ${type}`;
+      element.textContent = message;
+    }
+
+    async function handleAspirationAction(action, aspirationId) {
+      const feedbackEl = document.getElementById("aspirationActionFeedback");
+      if (!aspirationId) return showInlineFeedback(feedbackEl, "error", "Aspiration ID is missing.");
+
+      const path = action === "upvote" ? endpoints.upvoteAspiration(aspirationId) : endpoints.voteAspiration(aspirationId);
+      showInlineFeedback(feedbackEl, "success", `Sending ${action} request...`);
+
+      try {
+        const result = await postJsonWithFallback(fullUrl(path));
+        const aspirationsElements = getSectionElements("aspirations");
+        renderJson(aspirationsElements.json, result.payload);
+        showInlineFeedback(feedbackEl, "success", `${action} succeeded with status ${result.status}. Re-fetching featured aspirations...`);
+        await fetchSection("aspirations", aspirationsElements);
+      } catch (error) {
+        showInlineFeedback(feedbackEl, "error", `${action} failed${error?.status ? ` (${error.status})` : ""}: ${error?.message || "Unknown error"}`);
+      }
+    }
+
+    async function handleSubmitAspiration(event) {
+      event.preventDefault();
+      const form = document.getElementById("aspirationSubmitForm");
+      const btn = document.getElementById("submitAspirationBtn");
+      const statusBadge = document.getElementById("submitStatusBadge");
+      const jsonEl = document.getElementById("submitJson");
+      const feedbackEl = document.getElementById("submitFeedback");
+      const ticketBox = document.getElementById("submitTicketBox");
+
+      if (!form.reportValidity()) return;
+
+      const formData = new FormData();
+      formData.append("full_name", document.getElementById("submitFullName").value.trim());
+      formData.append("npm", document.getElementById("submitNpm").value.trim());
+      formData.append("email", document.getElementById("submitEmail").value.trim());
+      formData.append("title", document.getElementById("submitTitle").value.trim());
+      formData.append("short_description", document.getElementById("submitDescription").value.trim());
+
+      const file = document.getElementById("submitAttachment").files[0];
+      if (file) formData.append("evidence_attachment", file);
+
+      btn.disabled = true;
+      setStatus(statusBadge, "loading", "Submitting...");
+      feedbackEl.style.display = "none";
+      ticketBox.style.display = "none";
+
+      const candidatePaths = [endpoints.submitAspiration, ...(fallbackEndpoints.submitAspiration || [])];
+      let lastError = null;
+
+      for (const path of candidatePaths) {
+        try {
+          const result = await fetchJson(fullUrl(path), { method: "POST", body: formData });
+          renderJson(jsonEl, result.payload);
+          const ticketId = findTicketId(result.payload);
+          setStatus(statusBadge, "success", `Success (${result.status})`);
+          document.getElementById("submitLastFetched").textContent = `Last successful submit: ${new Date().toLocaleString()}`;
+          showInlineFeedback(feedbackEl, "success", "Aspiration submission succeeded.");
+          if (ticketId) {
+            ticketBox.style.display = "block";
+            ticketBox.innerHTML = `<strong>Returned Ticket ID:</strong> ${escapeHtml(ticketId)}`;
+            document.getElementById("trackTicketInput").value = ticketId;
+          }
+          btn.disabled = false;
+          return;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      renderJson(jsonEl, lastError?.payload || { error: lastError?.message || "Unknown error" });
+      setStatus(statusBadge, "error", `Error${lastError?.status ? ` (${lastError.status})` : ""}`);
+      showInlineFeedback(feedbackEl, "error", lastError?.message || "Submission failed.");
+      btn.disabled = false;
+    }
+
+    async function handleTrackTicket() {
+      const input = document.getElementById("trackTicketInput");
+      const statusBadge = document.getElementById("trackStatusBadge");
+      const preview = document.getElementById("trackPreview");
+      const jsonEl = document.getElementById("trackJson");
+      const ticketId = input.value.trim();
+
+      if (!ticketId) {
+        setStatus(statusBadge, "idle", "Empty query");
+        preview.innerHTML = '<div class="preview-empty">Empty state. Enter a ticket ID to check progress.</div>';
+        renderJson(jsonEl, { message: "Ticket ID is blank." });
+        return;
+      }
+
+      setStatus(statusBadge, "loading", "Loading...");
+      const candidatePaths = [
+        `${endpoints.trackTicket}?ticket_id=${encodeURIComponent(ticketId)}`,
+        ...((fallbackEndpoints.trackTicket || []).map((path) => `${path}?ticket_id=${encodeURIComponent(ticketId)}`))
+      ];
+
+      let lastError = null;
+      for (const path of candidatePaths) {
+        try {
+          const result = await fetchJson(fullUrl(path));
+          const normalized = unwrapData(result.payload);
+          preview.innerHTML = renderTrackingPreview(normalized);
+          renderJson(jsonEl, result.payload);
+          setStatus(statusBadge, "success", `Success (${result.status})`);
+          document.getElementById("trackLastFetched").textContent = `Last successful fetch: ${new Date().toLocaleString()}`;
+          return;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      preview.innerHTML = `<div class="preview-empty">Ticket lookup failed. ${escapeHtml(lastError?.message || "Unknown error")}</div>`;
+      renderJson(jsonEl, lastError?.payload || { error: lastError?.message || "Unknown error" });
+      setStatus(statusBadge, "error", `Error${lastError?.status ? ` (${lastError.status})` : ""}`);
+    }
+
+    async function fetchAllGetApis() {
+      for (const key of Object.keys(sectionConfigs)) {
+        await fetchSection(key, getSectionElements(key));
+      }
+    }
+
+    function clearAll() {
+      Object.keys(sectionConfigs).forEach(clearGetSection);
+      competencyItemsCache = [];
+      document.getElementById("submitJson").textContent = "No submission made yet.";
+      document.getElementById("trackJson").textContent = "No ticket lookup yet.";
+      document.getElementById("trackPreview").innerHTML = '<div class="preview-empty">Cleared.</div>';
+      setStatus(document.getElementById("submitStatusBadge"), "idle", "Idle");
+      setStatus(document.getElementById("trackStatusBadge"), "idle", "Idle");
+      document.getElementById("submitLastFetched").textContent = "Last successful submit: -";
+      document.getElementById("trackLastFetched").textContent = "Last successful fetch: -";
+      document.getElementById("submitFeedback").style.display = "none";
+      document.getElementById("submitTicketBox").style.display = "none";
+      document.getElementById("aspirationActionFeedback").style.display = "none";
+      document.getElementById("aspirationSubmitForm").reset();
+      document.getElementById("trackTicketInput").value = "";
+      updateOverallStatus();
+    }
+
+    Object.keys(sectionConfigs).forEach((key) => {
+      const elements = getSectionElements(key);
+      if (elements.endpointLabel) {
+        elements.endpointLabel.textContent = fullUrl(endpoints[key]);
+      }
+      if (elements.fetchButton) {
+        elements.fetchButton.addEventListener("click", () => fetchSection(key, elements));
+      }
+      clearGetSection(key);
+    });
+
+    document.getElementById("fetchAllBtn").addEventListener("click", fetchAllGetApis);
+    document.getElementById("clearAllBtn").addEventListener("click", clearAll);
+    document.getElementById("aspirationSubmitForm").addEventListener("submit", handleSubmitAspiration);
+    document.getElementById("resetSubmitFormBtn").addEventListener("click", () => {
+      document.getElementById("aspirationSubmitForm").reset();
+      document.getElementById("submitFeedback").style.display = "none";
+      document.getElementById("submitTicketBox").style.display = "none";
+    });
+    document.getElementById("trackTicketBtn").addEventListener("click", handleTrackTicket);
+
+    document.addEventListener("click", (event) => {
+      const actionButton = event.target.closest("[data-aspiration-action]");
+      if (actionButton) {
+        handleAspirationAction(actionButton.dataset.aspirationAction, actionButton.dataset.aspirationId);
+        return;
+      }
+
+      const filterButton = event.target.closest("[data-competency-filter]");
+      if (filterButton) {
+        competencyActiveFilter = filterButton.dataset.competencyFilter;
+        document.querySelectorAll("[data-competency-filter]").forEach((btn) => btn.classList.remove("active"));
+        filterButton.classList.add("active");
+        const competencyElements = getSectionElements("competency");
+        competencyElements.preview.innerHTML = renderCompetencyPreview(competencyItemsCache);
+      }
+    });
+
+    document.getElementById("trackPreview").innerHTML = '<div class="preview-empty">Empty state. Enter a ticket ID to check progress.</div>';
+    updateOverallStatus();
+  </script>
+</body>
+</html>

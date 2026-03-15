@@ -1,0 +1,62 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h2 class="h5 mb-1">{{ aspiration.title }}</h2>
+                        <div class="text-muted small">{{ aspiration.ticket_id }}</div>
+                    </div>
+                    <a href="{% url 'dashboard:aspiration-delete' aspiration.pk %}" class="btn btn-outline-danger btn-sm">Hapus</a>
+                </div>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Nama</dt><dd class="col-sm-8">{{ aspiration.full_name }}</dd>
+                    <dt class="col-sm-4">NPM</dt><dd class="col-sm-8">{{ aspiration.npm }}</dd>
+                    <dt class="col-sm-4">Email</dt><dd class="col-sm-8">{{ aspiration.email }}</dd>
+                    <dt class="col-sm-4">Deskripsi</dt><dd class="col-sm-8">{{ aspiration.short_description }}</dd>
+                    <dt class="col-sm-4">Attachment</dt><dd class="col-sm-8">{% if aspiration.evidence_attachment %}<a href="{{ aspiration.evidence_attachment.url }}" target="_blank">Lihat attachment</a>{% else %}<span class="text-muted">Tidak ada attachment</span>{% endif %}</dd>
+                    <dt class="col-sm-4">Votes</dt><dd class="col-sm-8">{{ aspiration.vote_count }} vote / {{ aspiration.upvote_count }} upvote</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body p-4">
+                <h2 class="h6 mb-3">Riwayat Aktivitas</h2>
+                <ul class="list-group list-group-flush">
+                    {% for log in activity_logs %}
+                        <li class="list-group-item px-0">
+                            <div class="fw-semibold">{{ log.message }}</div>
+                            <div class="small text-muted">{{ log.created_at|date:"d M Y H:i" }}{% if log.actor_name %} by {{ log.actor_name }}{% endif %}</div>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item px-0 text-muted">Belum ada log aktivitas.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="h6 mb-3">Update Aspirasi</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-dark">Simpan Perubahan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

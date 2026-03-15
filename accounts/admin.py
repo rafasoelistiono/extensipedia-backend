@@ -1,0 +1,49 @@
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
+
+from accounts.models import User
+
+
+@admin.register(User)
+class UserAdmin(DjangoUserAdmin):
+    ordering = ("email",)
+    list_display = ("email", "full_name", "is_staff", "is_active", "created_at")
+    search_fields = ("email", "full_name")
+    readonly_fields = (
+        "id",
+        "created_at",
+        "updated_at",
+        "created_by",
+        "updated_by",
+        "last_login",
+        "date_joined",
+    )
+    fieldsets = (
+        (None, {"fields": ("id", "email", "password")}),
+        ("Profile", {"fields": ("full_name", "phone_number", "avatar")}),
+        (
+            "Permissions",
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                )
+            },
+        ),
+        (
+            "Audit",
+            {"fields": ("created_by", "updated_by", "last_login", "date_joined", "created_at", "updated_at")},
+        ),
+    )
+    add_fieldsets = (
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": ("email", "full_name", "password1", "password2", "is_staff", "is_active"),
+            },
+        ),
+    )

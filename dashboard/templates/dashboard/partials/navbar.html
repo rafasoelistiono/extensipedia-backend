@@ -1,0 +1,16 @@
+<header class="dashboard-navbar">
+    <div>
+        <h1 class="h4 mb-1">{{ page_heading }}</h1>
+        {% if page_description %}
+            <p class="text-muted mb-0">{{ page_description }}</p>
+        {% endif %}
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <div class="text-end">
+            <div class="fw-semibold">{{ request.user.full_name|default:request.user.email }}</div>
+            <div class="small text-muted">Superadmin</div>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" href="{% url 'dashboard:logout' %}">Logout</a>
+    </div>
+</header>
+

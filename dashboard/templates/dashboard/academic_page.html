@@ -1,0 +1,120 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h6 mb-0">Quick Download</h2>
+                    <a href="{% url 'dashboard:quick-download-create' %}" class="btn btn-sm btn-dark">Tambah Item</a>
+                </div>
+                <table class="table align-middle">
+                    <thead><tr><th>Title</th><th>Type</th><th>Status</th><th></th></tr></thead>
+                    <tbody>
+                        {% for item in quick_downloads %}
+                            <tr>
+                                <td>{{ item.title }}</td>
+                                <td>{{ item.file|yesno:"File,Link" }}</td>
+                                <td><span class="badge {% if item.is_active %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ item.is_active|yesno:"Active,Inactive" }}</span></td>
+                                <td class="text-end">
+                                    <a href="{% url 'dashboard:quick-download-update' item.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    <a href="{% url 'dashboard:quick-download-delete' item.pk %}" class="btn btn-sm btn-outline-danger">Hapus</a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="4" class="text-muted">Belum ada quick download.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h6 mb-0">Repo Bahan Kuliah: Akuntansi</h2>
+                    <a href="{% url 'dashboard:repository-create' %}" class="btn btn-sm btn-dark">Tambah Item</a>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for item in repository_akuntansi %}
+                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <span>{{ item.title }}</span>
+                            <span><a href="{% url 'dashboard:repository-update' item.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a> <a href="{% url 'dashboard:repository-delete' item.pk %}" class="btn btn-sm btn-outline-danger">Hapus</a></span>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item px-0 text-muted">Belum ada item Akuntansi.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <h2 class="h6 mb-3">Repo Bahan Kuliah: Manajemen</h2>
+                <ul class="list-group list-group-flush">
+                    {% for item in repository_manajemen %}
+                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <span>{{ item.title }}</span>
+                            <span><a href="{% url 'dashboard:repository-update' item.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a> <a href="{% url 'dashboard:repository-delete' item.pk %}" class="btn btn-sm btn-outline-danger">Hapus</a></span>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item px-0 text-muted">Belum ada item Manajemen.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <h2 class="h6 mb-3">YouTube Section</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in youtube_form %}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                        </div>
+                    {% endfor %}
+                    <button class="btn btn-dark" type="submit">Simpan YouTube Section</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h6 mb-0">Event Countdown</h2>
+                    <a href="{% url 'dashboard:countdown-create' %}" class="btn btn-sm btn-dark">Tambah Event</a>
+                </div>
+                <table class="table align-middle">
+                    <thead><tr><th>Title</th><th>Target</th><th></th></tr></thead>
+                    <tbody>
+                        {% for item in countdown_events %}
+                            <tr>
+                                <td>{{ item.title }}</td>
+                                <td>{{ item.target_datetime|date:"d M Y H:i" }}</td>
+                                <td class="text-end">
+                                    <a href="{% url 'dashboard:countdown-update' item.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    <a href="{% url 'dashboard:countdown-delete' item.pk %}" class="btn btn-sm btn-outline-danger">Hapus</a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="3" class="text-muted">Belum ada event countdown.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

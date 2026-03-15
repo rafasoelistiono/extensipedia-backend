@@ -1,0 +1,38 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="h6 mb-1">Agenda Cards</h2>
+                <p class="text-muted small mb-0">Maksimal 15 card. Urutan mengikuti sort order lalu deadline terdekat.</p>
+            </div>
+            <a href="{% url 'dashboard:agenda-card-create' %}" class="btn btn-dark btn-sm">Tambah Agenda</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead><tr><th>Title</th><th>Tags</th><th>Deadline</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                    {% for item in agenda_cards %}
+                        <tr>
+                            <td><div class="fw-semibold">{{ item.title }}</div><div class="small text-muted">{{ item.short_description|truncatechars:90 }}</div></td>
+                            <td class="small"><span class="badge text-bg-light">{{ item.category_tag }}</span> <span class="badge text-bg-light">{{ item.scope_tag }}</span> <span class="badge text-bg-light">{{ item.pricing_tag }}</span></td>
+                            <td>{{ item.deadline_date|date:"d M Y" }}</td>
+                            <td><span class="badge {% if item.is_active %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ item.is_active|yesno:"Active,Inactive" }}</span></td>
+                            <td class="text-end">
+                                <a href="{% url 'dashboard:agenda-card-update' item.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                <a href="{% url 'dashboard:agenda-card-delete' item.pk %}" class="btn btn-sm btn-outline-danger">Hapus</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="text-muted">Belum ada agenda kompetensi.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "dashboard/partials/pagination.html" %}
+    </div>
+</div>
+{% endblock %}
+

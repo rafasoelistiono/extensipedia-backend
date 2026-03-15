@@ -1,0 +1,55 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4 col-xl-2"><div class="stat-card"><span>Total Aspirasi</span><strong>{{ summary.total_aspiration_submissions }}</strong></div></div>
+    <div class="col-md-4 col-xl-2"><div class="stat-card"><span>Submitted</span><strong>{{ summary.status_counts.submitted }}</strong></div></div>
+    <div class="col-md-4 col-xl-2"><div class="stat-card"><span>Investigating</span><strong>{{ summary.status_counts.investigating }}</strong></div></div>
+    <div class="col-md-4 col-xl-2"><div class="stat-card"><span>Resolved</span><strong>{{ summary.status_counts.resolved }}</strong></div></div>
+    <div class="col-md-4 col-xl-2"><div class="stat-card"><span>Featured</span><strong>{{ summary.total_featured_aspirations }}</strong></div></div>
+    <div class="col-md-4 col-xl-2"><div class="stat-card"><span>Pengunjung 30 Hari</span><strong>{{ summary.total_visitors_last_30_days }}</strong></div></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Recent Log Masukan Tiket</h2>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead><tr><th>Ticket</th><th>Aksi</th><th>Status</th><th>Waktu</th></tr></thead>
+                        <tbody>
+                            {% for log in recent_logs %}
+                                <tr>
+                                    <td><div class="fw-semibold">{{ log.aspiration.ticket_id }}</div><div class="small text-muted">{{ log.aspiration.title }}</div></td>
+                                    <td>{{ log.message }}</td>
+                                    <td><span class="badge text-bg-light">{{ log.status_snapshot }}</span></td>
+                                    <td class="small text-muted">{{ log.created_at|date:"d M Y H:i" }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="4" class="text-muted">Belum ada aktivitas tiket.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Quick Navigation</h2>
+                <div class="d-grid gap-3">
+                    {% for item in quick_links %}
+                        <a href="{{ item.url }}" class="quick-link-card">
+                            <div class="fw-semibold">{{ item.title }}</div>
+                            <div class="small text-muted">{{ item.description }}</div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

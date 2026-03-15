@@ -1,0 +1,33 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <form method="get" class="row g-2 mb-4">
+            <div class="col-md-10">{{ search_form.q }}</div>
+            <div class="col-md-2 d-grid"><button class="btn btn-dark" type="submit">Cari Tiket</button></div>
+        </form>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead><tr><th>Ticket ID</th><th>Nama</th><th>Email</th><th>Judul</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+                <tbody>
+                    {% for item in tickets %}
+                        <tr>
+                            <td>{{ item.ticket_id }}</td>
+                            <td>{{ item.full_name }}</td>
+                            <td>{{ item.email }}</td>
+                            <td>{{ item.title }}</td>
+                            <td><span class="badge text-bg-light">{{ item.status }}</span></td>
+                            <td>{{ item.updated_at|date:"d M Y H:i" }}</td>
+                            <td class="text-end"><a href="{% url 'dashboard:aspiration-detail' item.pk %}" class="btn btn-sm btn-outline-secondary">Buka Detail</a></td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="7" class="text-muted">Tidak ada tiket yang cocok.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "dashboard/partials/pagination.html" with page_obj=page_obj %}
+    </div>
+</div>
+{% endblock %}
