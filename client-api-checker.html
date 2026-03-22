@@ -366,6 +366,14 @@
       border: 0;
     }
 
+    .code-block {
+      margin-top: 6px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #dbe3ee;
+      background: #fff;
+    }
+
     .inline-note {
       margin-top: 10px;
       padding: 10px 12px;
@@ -503,25 +511,10 @@
 
   <main class="container">
     <div class="page-sections">
-      <section class="section-card" data-section="hero">
+      <section class="section-card" data-section="cabinetCalendar">
         <div class="section-head">
           <div class="section-title-wrap">
-            <h2>1. HERO</h2>
-            <div class="section-endpoint" data-endpoint-label></div>
-            <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
-          </div>
-          <div class="button-row"><button class="btn small primary" data-fetch-btn>Fetch</button></div>
-        </div>
-        <div class="section-body grid-two">
-          <div class="preview-box"><h3 class="box-title">Preview</h3><div data-preview></div></div>
-          <div class="json-box"><h3 class="box-title">Raw JSON</h3><pre data-json>Not fetched yet.</pre></div>
-        </div>
-      </section>
-
-      <section class="section-card" data-section="about">
-        <div class="section-head">
-          <div class="section-title-wrap">
-            <h2>2. TENTANG KAMI</h2>
+            <h2>1. KALENDER KABINET</h2>
             <div class="section-endpoint" data-endpoint-label></div>
             <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
           </div>
@@ -536,7 +529,7 @@
       <section class="section-card" data-section="quickDownloads">
         <div class="section-head">
           <div class="section-title-wrap">
-            <h2>3. AKADEMIK - QUICK DOWNLOAD</h2>
+            <h2>2. AKADEMIK - QUICK DOWNLOAD</h2>
             <div class="section-endpoint" data-endpoint-label></div>
             <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
           </div>
@@ -551,7 +544,7 @@
       <section class="section-card" data-section="repositories">
         <div class="section-head">
           <div class="section-title-wrap">
-            <h2>4. AKADEMIK - REPOSITORY BAHAN KULIAH</h2>
+            <h2>3. AKADEMIK - REPOSITORY BAHAN KULIAH</h2>
             <div class="section-endpoint" data-endpoint-label></div>
             <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
           </div>
@@ -566,7 +559,7 @@
       <section class="section-card" data-section="youtube">
         <div class="section-head">
           <div class="section-title-wrap">
-            <h2>5. AKADEMIK - YOUTUBE</h2>
+            <h2>4. AKADEMIK - YOUTUBE</h2>
             <div class="section-endpoint" data-endpoint-label></div>
             <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
           </div>
@@ -581,7 +574,7 @@
       <section class="section-card" data-section="countdowns">
         <div class="section-head">
           <div class="section-title-wrap">
-            <h2>6. AKADEMIK - EVENT COUNTDOWN</h2>
+            <h2>5. AKADEMIK - EVENT COUNTDOWN</h2>
             <div class="section-endpoint" data-endpoint-label></div>
             <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
           </div>
@@ -596,7 +589,7 @@
       <section class="section-card" data-section="competency">
         <div class="section-head">
           <div class="section-title-wrap">
-            <h2>7. KOMPETENSI</h2>
+            <h2>6. KOMPETENSI</h2>
             <div class="section-endpoint" data-endpoint-label></div>
             <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
           </div>
@@ -607,7 +600,7 @@
             <h3 class="box-title">Preview</h3>
             <div class="filter-row">
               <button class="btn small filter-btn active" data-competency-filter="all">All</button>
-              <button class="btn small filter-btn" data-competency-filter="gratis">Gratis</button>
+              <button class="btn small filter-btn" data-competency-filter="tidak berbayar">Tidak Berbayar</button>
               <button class="btn small filter-btn" data-competency-filter="berbayar">Berbayar</button>
               <button class="btn small filter-btn" data-competency-filter="nasional">Nasional</button>
               <button class="btn small filter-btn" data-competency-filter="internasional">Internasional</button>
@@ -621,7 +614,7 @@
       <section class="section-card" data-section="career">
         <div class="section-head">
           <div class="section-title-wrap">
-            <h2>8. KARIR</h2>
+            <h2>7. KARIR</h2>
             <div class="section-endpoint" data-endpoint-label></div>
             <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
           </div>
@@ -636,7 +629,7 @@
       <section class="section-card" data-section="aspirations">
         <div class="section-head">
           <div class="section-title-wrap">
-            <h2>9. ASPIRASI FEATURED</h2>
+            <h2>8. ASPIRASI FEATURED</h2>
             <div class="section-endpoint" data-endpoint-label></div>
             <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
           </div>
@@ -655,7 +648,7 @@
       <section class="section-card" id="submitTesterSection">
         <div class="section-head">
           <div class="section-title-wrap">
-            <h2>10. ASPIRASI SUBMIT TESTER</h2>
+            <h2>9. ASPIRASI SUBMIT TESTER</h2>
             <div class="section-endpoint" id="submitEndpointLabel"></div>
             <div class="section-meta"><span class="badge idle" id="submitStatusBadge">Idle</span><span id="submitLastFetched">Last successful submit: -</span></div>
           </div>
@@ -686,7 +679,7 @@
       <section class="section-card" id="trackTesterSection">
         <div class="section-head">
           <div class="section-title-wrap">
-            <h2>11. LACAK TIKET TESTER</h2>
+            <h2>10. LACAK TIKET TESTER</h2>
             <div class="section-endpoint" id="trackEndpointLabel"></div>
             <div class="section-meta"><span class="badge idle" id="trackStatusBadge">Idle</span><span id="trackLastFetched">Last successful fetch: -</span></div>
           </div>
@@ -718,8 +711,7 @@
   <script>
     const API_BASE_URL = "http://127.0.0.1:8000";
     const endpoints = {
-      hero: "/api/v1/public/hero",
-      about: "/api/v1/public/about",
+      cabinetCalendar: "/api/v1/public/about/cabinet-calendar/",
       quickDownloads: "/api/v1/public/academic/quick-downloads",
       repositories: "/api/v1/public/academic/repositories",
       youtube: "/api/v1/public/academic/youtube",
@@ -727,15 +719,14 @@
       competency: "/api/v1/public/competency/agendas",
       career: "/api/v1/public/career/resources",
       aspirations: "/api/v1/public/aspirations/featured",
-      submitAspiration: "/api/v1/public/aspirations/submit",
+      submitAspiration: "/api/v1/public/aspirations/submit/",
       trackTicket: "/api/v1/public/tickets/track",
       upvoteAspiration: (id) => `/api/v1/public/aspirations/${id}/upvote`,
       voteAspiration: (id) => `/api/v1/public/aspirations/${id}/vote`
     };
 
     const fallbackEndpoints = {
-      hero: ["/api/v1/public/about/hero/"],
-      about: ["/api/v1/public/about/tentang-kami/"],
+      cabinetCalendar: ["/api/v1/public/about/cabinet-calendar"],
       quickDownloads: ["/api/v1/public/academic/quick-downloads/"],
       repositories: ["/api/v1/public/academic/repository/"],
       youtube: ["/api/v1/public/academic/youtube/"],
@@ -748,8 +739,7 @@
     };
 
     const sectionConfigs = {
-      hero: { title: "Hero", method: "GET" },
-      about: { title: "Tentang Kami", method: "GET" },
+      cabinetCalendar: { title: "Kalender Kabinet", method: "GET" },
       quickDownloads: { title: "Quick Downloads", method: "GET" },
       repositories: { title: "Repositories", method: "GET" },
       youtube: { title: "YouTube", method: "GET" },
@@ -888,8 +878,7 @@
     function normalizeSectionData(sectionKey, data) {
       const raw = unwrapData(data);
       switch (sectionKey) {
-        case "hero":
-        case "about":
+        case "cabinetCalendar":
         case "youtube":
         case "career":
           return raw && raw.items && !Array.isArray(raw.items) ? raw.items : raw;
@@ -909,25 +898,29 @@
       return item?.image || item?.logo || item?.thumbnail || item?.photo || null;
     }
 
-    function renderHeroPreview(data) {
-      if (!data || typeof data !== "object") return '<div class="preview-empty">No hero data</div>';
-      const imageUrl = extractImageUrl(data);
+    function renderCabinetCalendarPreview(data) {
+      if (!data || typeof data !== "object") return '<div class="preview-empty">No cabinet calendar data</div>';
+      const embedCode = String(data.embed_code || "").trim();
+      const embeddableUrl = extractEmbeddableUrl(data.embed_url || embedCode);
       return `
         ${createField("Title", escapeHtml(data.title || "Untitled"))}
-        ${createField("Subtitle", escapeHtml(data.subtitle || ""))}
         ${createField("Description", escapeHtml(data.description || ""))}
-        ${imageUrl ? `<img class="image-preview" src="${escapeHtml(imageUrl)}" alt="Hero image" />` : '<div class="inline-note">No image</div>'}
-      `;
-    }
-
-    function renderAboutPreview(data) {
-      if (!data || typeof data !== "object") return '<div class="preview-empty">No about data</div>';
-      const imageUrl = extractImageUrl(data);
-      return `
-        ${createField("Title", escapeHtml(data.title || "Untitled"))}
-        ${createField("Subtitle", escapeHtml(data.subtitle || ""))}
-        ${createField("Description", escapeHtml(data.description || ""))}
-        ${imageUrl ? `<img class="image-preview" src="${escapeHtml(imageUrl)}" alt="About image" />` : '<div class="inline-note">No image</div>'}
+        ${createField("Provider", escapeHtml(data.provider || "N/A"))}
+        ${createField(
+          "Embed URL",
+          data.embed_url
+            ? `<a href="${escapeHtml(data.embed_url)}" target="_blank" rel="noopener">${escapeHtml(data.embed_url)}</a>`
+            : '<span class="preview-empty">No embed URL</span>'
+        )}
+        ${createField(
+          "Embed Code",
+          embedCode
+            ? `<pre class="code-block">${escapeHtml(embedCode)}</pre>`
+            : '<span class="preview-empty">No embed code</span>'
+        )}
+        ${embeddableUrl
+          ? `<div class="iframe-wrap"><iframe src="${escapeHtml(embeddableUrl)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div>`
+          : '<div class="inline-note">No embeddable iframe source detected.</div>'}
       `;
     }
 
@@ -1015,6 +1008,10 @@
       });
     }
 
+    function formatAgendaBooleanTag(label, value) {
+      return `${label}: ${value === true ? "true" : "false"}`;
+    }
+
     function renderCompetencyPreview(items) {
       const filtered = filterCompetencyItems(Array.isArray(items) ? items : [], competencyActiveFilter);
       if (!filtered.length) return '<div class="preview-empty">No competency agenda items for this filter</div>';
@@ -1023,8 +1020,8 @@
           <h4>${escapeHtml(item.title || "Untitled agenda")}</h4>
           <div>${escapeHtml(item.short_description || "")}</div>
           <div class="tag-row">
-            <span class="tag">${escapeHtml(item.urgency_tag || "urgency")}</span>
-            <span class="tag">${escapeHtml(item.recommendation_tag || "recommendation")}</span>
+            <span class="tag">${escapeHtml(formatAgendaBooleanTag("urgency", item.urgency_tag))}</span>
+            <span class="tag">${escapeHtml(formatAgendaBooleanTag("recommendation", item.recommendation_tag))}</span>
             <span class="tag">${escapeHtml(item.category_tag || "category")}</span>
             <span class="tag">${escapeHtml(item.scope_tag || "scope")}</span>
             <span class="tag">${escapeHtml(item.pricing_tag || "pricing")}</span>
@@ -1093,8 +1090,7 @@
 
     function renderSectionPreview(sectionKey, normalizedData) {
       switch (sectionKey) {
-        case "hero": return renderHeroPreview(normalizedData);
-        case "about": return renderAboutPreview(normalizedData);
+        case "cabinetCalendar": return renderCabinetCalendarPreview(normalizedData);
         case "quickDownloads": return renderQuickDownloadsPreview(normalizedData);
         case "repositories": return renderRepositoriesPreview(normalizedData);
         case "youtube": return renderYoutubePreview(normalizedData);

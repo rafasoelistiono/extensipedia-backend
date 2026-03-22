@@ -107,6 +107,34 @@ class AspirationPublicFlowTests(APITestCase):
         self.assertEqual(aspiration.upvote_count, 2)
         self.assertEqual(aspiration.vote_count, 2)
 
+    def test_public_voting_without_trailing_slash_is_supported(self):
+        aspiration = AspirationSubmission.objects.create(
+            ticket_id="ASP-VOTE00002",
+            full_name="Visible User",
+            npm="22000013",
+            email="vote2@example.com",
+            title="Voting Ticket 2",
+            short_description="Voting ticket description 2",
+            visibility=AspirationSubmission.Visibility.PUBLIC,
+            status=AspirationSubmission.Status.SUBMITTED,
+            is_featured=False,
+        )
+
+        upvote_url = f"/api/v1/public/aspirations/{aspiration.pk}/upvote"
+        vote_url = f"/api/v1/public/aspirations/{aspiration.pk}/vote"
+
+        upvote_response = self.client.post(upvote_url)
+        vote_response = self.client.post(vote_url)
+
+        self.assertEqual(upvote_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(vote_response.status_code, status.HTTP_200_OK)
+
+        aspiration.refresh_from_db()
+        self.assertEqual(aspiration.upvote_count, 1)
+        self.assertEqual(aspiration.vote_count, 1)
+        self.assertEqual(unwrap_response_data(upvote_response)["upvote_count"], 1)
+        self.assertEqual(unwrap_response_data(vote_response)["vote_count"], 1)
+
     def test_ticket_tracking_returns_public_safe_payload(self):
         aspiration = AspirationSubmission.objects.create(
             ticket_id="ASP-ABCDEF1234",

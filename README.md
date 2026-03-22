@@ -6,12 +6,25 @@ REST backend for a campus/organization website built with Django, Django REST Fr
 
 ```bash
 python -m venv venv
-venv\Scripts\activate
-venv\Scripts\python -m pip install -r requirements.txt
-copy .env.example .env
+.\venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
 ```
 
-Update `.env` with your local values, especially `DATABASE_URL`, `DJANGO_SECRET_KEY`, and allowed origins.
+Create `.env` in the project root if it does not exist yet, then update it with your local values, especially `DATABASE_URL`, `DJANGO_SECRET_KEY`, and allowed origins.
+
+If PowerShell blocks activation, run this once in a normal PowerShell window:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
+After activation, verify that `python` points to the project virtual environment:
+
+```powershell
+python -c "import sys; print(sys.executable)"
+```
+
+Expected output on Windows should end with `\extensipedia-backend\venv\Scripts\python.exe`.
 
 ## Environment Variables
 
@@ -32,19 +45,25 @@ JWT_REFRESH_TOKEN_DAYS=7
 ## Migrations
 
 ```bash
-venv\Scripts\python manage.py migrate
+python manage.py migrate
 ```
 
 ## Create Superuser
 
 ```bash
-venv\Scripts\python manage.py createsuperuser
+python manage.py createsuperuser
 ```
 
 ## Run Server
 
 ```bash
-venv\Scripts\python manage.py runserver
+python manage.py runserver
+```
+
+If `python` is still not using the virtual environment, use the interpreter path explicitly:
+
+```powershell
+.\venv\Scripts\python.exe manage.py runserver
 ```
 
 Useful URLs:
@@ -74,19 +93,19 @@ It is for local development only and must be replaced with environment-based or 
 If you need to recreate it manually:
 
 ```bash
-venv\Scripts\python manage.py create_local_superadmin
+python manage.py create_local_superadmin
 ```
 
 ## Run Tests
 
 ```bash
-venv\Scripts\python manage.py test --settings=config.settings.test
+python manage.py test --settings=config.settings.test
 ```
 
 ## Seed Demo Data
 
 ```bash
-venv\Scripts\python manage.py seed_demo_data
+python manage.py seed_demo_data
 ```
 
 This seeds representative public content, featured aspirations, career resources, competency agenda cards, and 30 days of visitor analytics for dashboard demo use.

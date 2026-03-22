@@ -79,6 +79,18 @@ class PublicTrackingSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class PublicAspirationInteractionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AspirationSubmission
+        fields = (
+            "id",
+            "ticket_id",
+            "upvote_count",
+            "vote_count",
+        )
+        read_only_fields = fields
+
+
 class AdminAspirationListSerializer(BaseModelSerializer):
     class Meta:
         model = AspirationSubmission

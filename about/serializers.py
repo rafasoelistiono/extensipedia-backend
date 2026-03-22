@@ -85,7 +85,19 @@ class PublicAboutSectionSerializer(serializers.ModelSerializer):
 class AdminCabinetCalendarSerializer(BaseModelSerializer):
     class Meta:
         model = CabinetCalendar
-        fields = "__all__"
+        fields = (
+            "id",
+            "title",
+            "description",
+            "embed_url",
+            "embed_code",
+            "sanitized_embed_url",
+            "provider",
+            "created_at",
+            "updated_at",
+            "created_by",
+            "updated_by",
+        )
         read_only_fields = BaseModelSerializer.Meta.read_only_fields + ("sanitized_embed_url", "provider")
 
     def validate(self, attrs):
@@ -110,7 +122,7 @@ class PublicCabinetCalendarSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "embed_url",
+            "embed_code",
             "provider",
-            "display_order",
         )
         read_only_fields = fields

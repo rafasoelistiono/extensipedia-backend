@@ -37,13 +37,17 @@
         </form>
         <div class="table-responsive">
             <table class="table align-middle">
-                <thead><tr><th>Ticket</th><th>Pengirim</th><th>Judul</th><th>Visibility</th><th>Status</th><th>Featured</th><th>Tanggal</th><th></th></tr></thead>
+                <thead><tr><th>Ticket</th><th>Pengirim</th><th>Judul</th><th>Interaksi</th><th>Visibility</th><th>Status</th><th>Featured</th><th>Tanggal</th><th></th></tr></thead>
                 <tbody>
                     {% for item in aspirations %}
                         <tr>
                             <td>{{ item.ticket_id }}</td>
                             <td><div>{{ item.full_name }}</div><div class="small text-muted">{{ item.email }}</div></td>
                             <td>{{ item.title }}</td>
+                            <td>
+                                <div class="small"><strong>{{ item.upvote_count }}</strong> upvote</div>
+                                <div class="small text-muted"><strong>{{ item.vote_count }}</strong> vote</div>
+                            </td>
                             <td><span class="badge text-bg-light">{{ item.visibility }}</span></td>
                             <td><span class="badge text-bg-light">{{ item.status }}</span></td>
                             <td>{% if item.is_featured %}<span class="badge text-bg-success">Featured</span>{% else %}<span class="badge text-bg-secondary">No</span>{% endif %}</td>
@@ -58,7 +62,7 @@
                             </td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="8" class="text-muted">Belum ada aspirasi.</td></tr>
+                        <tr><td colspan="9" class="text-muted">Belum ada aspirasi.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -67,4 +71,3 @@
     </div>
 </div>
 {% endblock %}
-

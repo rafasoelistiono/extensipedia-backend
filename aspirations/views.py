@@ -12,6 +12,7 @@ from aspirations.selectors import (
 from aspirations.serializers import (
     AdminAspirationDetailSerializer,
     AdminAspirationListSerializer,
+    PublicAspirationInteractionSerializer,
     PublicAspirationSubmitSerializer,
     PublicFeaturedAspirationSerializer,
     PublicTrackingSerializer,
@@ -64,34 +65,24 @@ class PublicFeaturedAspirationView(generics.ListAPIView):
 class PublicAspirationUpvoteView(APIView):
     permission_classes = [AllowAny]
     throttle_classes = [PublicAspirationInteractionBurstThrottle, PublicAspirationInteractionSustainedThrottle]
-    serializer_class = PublicFeaturedAspirationSerializer
+    serializer_class = PublicAspirationInteractionSerializer
 
     def post(self, request, pk):
-        aspiration = generics.get_object_or_404(
-            AspirationSubmission,
-            pk=pk,
-            is_featured=True,
-            status__in=[AspirationSubmission.Status.INVESTIGATING, AspirationSubmission.Status.RESOLVED],
-        )
+        aspiration = generics.get_object_or_404(AspirationSubmission, pk=pk)
         aspiration = increment_upvote(aspiration)
-        serializer = PublicFeaturedAspirationSerializer(aspiration, context={"request": request})
+        serializer = PublicAspirationInteractionSerializer(aspiration, context={"request": request})
         return success_response(serializer.data, message="Aspiration upvoted successfully")
 
 
 class PublicAspirationVoteView(APIView):
     permission_classes = [AllowAny]
     throttle_classes = [PublicAspirationInteractionBurstThrottle, PublicAspirationInteractionSustainedThrottle]
-    serializer_class = PublicFeaturedAspirationSerializer
+    serializer_class = PublicAspirationInteractionSerializer
 
     def post(self, request, pk):
-        aspiration = generics.get_object_or_404(
-            AspirationSubmission,
-            pk=pk,
-            is_featured=True,
-            status__in=[AspirationSubmission.Status.INVESTIGATING, AspirationSubmission.Status.RESOLVED],
-        )
+        aspiration = generics.get_object_or_404(AspirationSubmission, pk=pk)
         aspiration = increment_vote(aspiration)
-        serializer = PublicFeaturedAspirationSerializer(aspiration, context={"request": request})
+        serializer = PublicAspirationInteractionSerializer(aspiration, context={"request": request})
         return success_response(serializer.data, message="Aspiration vote recorded successfully")
 
 

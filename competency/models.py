@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.core.validators import MinLengthValidator
 from django.db import models
 
 from core.models import BaseModel, SlugModelMixin, image_upload_to
@@ -28,21 +29,32 @@ class CompetencyProgram(SlugModelMixin, BaseModel):
 class AgendaCard(BaseModel):
     MAX_RECORDS = 15
 
+    class CategoryTag(models.TextChoices):
+        WORKSHOP = "workshop", "Workshop"
+        LOMBA = "lomba", "Lomba"
+
+    class ScopeTag(models.TextChoices):
+        NASIONAL = "nasional", "Nasional"
+        INTERNASIONAL = "internasional", "Internasional"
+
+    class PricingTag(models.TextChoices):
+        BERBAYAR = "berbayar", "Berbayar"
+        TIDAK_BERBAYAR = "tidak berbayar", "Tidak Berbayar"
+
     title = models.CharField(max_length=255)
-    short_description = models.TextField()
-    urgency_tag = models.CharField(max_length=100)
-    recommendation_tag = models.CharField(max_length=100)
-    category_tag = models.CharField(max_length=100)
-    scope_tag = models.CharField(max_length=100)
-    pricing_tag = models.CharField(max_length=100)
+    short_description = models.TextField(validators=[MinLengthValidator(500)])
+    urgency_tag = models.BooleanField(default=False)
+    recommendation_tag = models.BooleanField(default=False)
+    category_tag = models.CharField(max_length=100, choices=CategoryTag.choices)
+    scope_tag = models.CharField(max_length=100, choices=ScopeTag.choices)
+    pricing_tag = models.CharField(max_length=100, choices=PricingTag.choices)
     deadline_date = models.DateField()
     registration_link = models.URLField()
     google_calendar_link = models.URLField(blank=True)
     is_active = models.BooleanField(default=True)
-    sort_order = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ["sort_order", "deadline_date", "title"]
+        ordering = ["-created_at", "-updated_at", "deadline_date", "title"]
 
     def __str__(self):
         return self.title

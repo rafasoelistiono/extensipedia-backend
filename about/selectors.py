@@ -29,13 +29,13 @@ def get_active_about_section():
     return AboutSection.objects.filter(is_active=True).select_related("created_by", "updated_by").first()
 
 
-def get_admin_about_sections():
-    return AboutSection.objects.select_related("created_by", "updated_by").all()
+def get_admin_about_section():
+    return AboutSection.objects.select_related("created_by", "updated_by").order_by("-updated_at").first()
 
 
-def get_public_cabinet_calendars():
-    return CabinetCalendar.objects.filter(is_active=True).select_related("created_by", "updated_by").all()
+def get_active_cabinet_calendar():
+    return CabinetCalendar.objects.filter(is_active=True).select_related("created_by", "updated_by").first()
 
 
-def get_admin_cabinet_calendars():
-    return CabinetCalendar.objects.select_related("created_by", "updated_by").all()
+def get_admin_cabinet_calendar():
+    return CabinetCalendar.objects.select_related("created_by", "updated_by").order_by("-updated_at").first()

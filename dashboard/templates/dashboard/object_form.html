@@ -14,9 +14,21 @@
             {% endif %}
             <div class="row g-3">
                 {% for field in form %}
-                    <div class="col-md-6">
-                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {{ field }}
+                    <div class="{% if field.field.widget.input_type == 'radio' %}col-12{% else %}col-md-6{% endif %}" data-field-name="{{ field.name }}">
+                        {% if field.field.widget.input_type == 'radio' %}
+                            <label class="form-label d-block">{{ field.label }}</label>
+                            <div class="dashboard-radio-stack">
+                                {% for choice in field %}
+                                    <div class="form-check dashboard-radio-option">
+                                        {{ choice.tag }}
+                                        <label class="form-check-label" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                        {% endif %}
                         {% if field.help_text %}
                             <div class="form-text">{{ field.help_text }}</div>
                         {% endif %}
@@ -33,5 +45,33 @@
         </form>
     </div>
 </div>
-{% endblock %}
+<script>
+    (() => {
+        const sourceInputs = document.querySelectorAll('[data-field-name="source_type"] input[type="radio"]');
+        const fileBlock = document.querySelector('[data-field-name="file"]');
+        const urlBlock = document.querySelector('[data-field-name="external_url"]');
 
+        if (!sourceInputs.length || !fileBlock || !urlBlock) {
+            return;
+        }
+
+        const toggleFieldGroup = () => {
+            const selected = Array.from(sourceInputs).find((input) => input.checked)?.value;
+            const showFile = selected === "file";
+
+            fileBlock.classList.toggle("dashboard-field-hidden", !showFile);
+            urlBlock.classList.toggle("dashboard-field-hidden", showFile);
+
+            fileBlock.querySelectorAll("input, select, textarea").forEach((element) => {
+                element.disabled = !showFile;
+            });
+            urlBlock.querySelectorAll("input, select, textarea").forEach((element) => {
+                element.disabled = showFile;
+            });
+        };
+
+        sourceInputs.forEach((input) => input.addEventListener("change", toggleFieldGroup));
+        toggleFieldGroup();
+    })();
+</script>
+{% endblock %}

@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 
@@ -113,20 +114,34 @@ class CabinetCalendar(BaseModel):
     embed_code = models.TextField(blank=True)
     sanitized_embed_url = models.URLField(editable=False, max_length=1000)
     provider = models.CharField(max_length=100, editable=False, blank=True)
-    display_order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ["display_order", "-updated_at", "title"]
+        ordering = ["-updated_at", "title"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["is_active"],
+                condition=Q(is_active=True),
+                name="unique_active_cabinet_calendar",
+            )
+        ]
 
     def __str__(self):
         return self.title
 
     def clean(self):
+        queryset = self.__class__.objects.all()
+        if self.pk:
+            queryset = queryset.exclude(pk=self.pk)
+        if queryset.exists():
+            raise ValidationError(
+                {"non_field_errors": ["Cabinet calendar only supports a single configuration item."]}
+            )
         self.sanitized_embed_url = validate_iframe_or_embed_input(self.embed_url, self.embed_code)
         self.provider = self.detect_provider(self.sanitized_embed_url)
 
     def save(self, *args, **kwargs):
+        self.is_active = True
         self.full_clean()
         super().save(*args, **kwargs)
 

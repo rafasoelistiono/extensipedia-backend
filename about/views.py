@@ -3,17 +3,15 @@ from rest_framework.views import APIView
 
 from accounts.permissions import IsAdminPanelUser
 from about.selectors import (
-    get_admin_about_sections,
-    get_admin_cabinet_calendars,
+    get_admin_cabinet_calendar,
     get_admin_hero_sections,
     get_admin_leadership_members,
     get_admin_organization_profiles,
-    get_public_cabinet_calendars,
+    get_active_cabinet_calendar,
     get_public_leadership_members,
     get_public_organization_profiles,
 )
 from about.serializers import (
-    AboutSectionSerializer,
     AdminCabinetCalendarSerializer,
     HeroSectionSerializer,
     LeadershipMemberSerializer,
@@ -24,7 +22,12 @@ from about.serializers import (
     PublicLeadershipMemberSerializer,
     PublicOrganizationProfileSerializer,
 )
-from about.services import get_active_about_section_or_404, get_active_hero_or_404
+from about.services import (
+    get_active_about_section_or_404,
+    get_active_cabinet_calendar_or_404,
+    get_active_hero_or_404,
+    get_or_build_cabinet_calendar,
+)
 from core.mixins import AdminCrudEndpointMixin, PublicReadOnlyEndpointMixin
 from core.responses import success_response
 
@@ -48,15 +51,14 @@ class PublicLeadershipMemberViewSet(PublicReadOnlyEndpointMixin):
         return get_public_leadership_members()
 
 
-class PublicCabinetCalendarViewSet(PublicReadOnlyEndpointMixin):
-    serializer_class = PublicCabinetCalendarSerializer
+class PublicActiveCabinetCalendarView(APIView):
     permission_classes = [AllowAny]
-    search_fields = ("title", "description", "provider")
-    ordering_fields = ("display_order", "updated_at", "title")
-    ordering = ("display_order", "-updated_at", "title")
+    serializer_class = PublicCabinetCalendarSerializer
 
-    def get_queryset(self):
-        return get_public_cabinet_calendars()
+    def get(self, request):
+        calendar = get_active_cabinet_calendar_or_404()
+        serializer = PublicCabinetCalendarSerializer(calendar, context={"request": request})
+        return success_response(serializer.data, message="Active cabinet calendar retrieved successfully")
 
 
 class PublicActiveHeroView(APIView):
@@ -115,25 +117,30 @@ class AdminHeroSectionViewSet(AdminCrudEndpointMixin):
         return get_admin_hero_sections()
 
 
-class AdminAboutSectionViewSet(AdminCrudEndpointMixin):
-    serializer_class = AboutSectionSerializer
+class AdminCabinetCalendarView(APIView):
     permission_classes = [IsAdminPanelUser]
-    filterset_fields = ("is_active",)
-    search_fields = ("title", "subtitle", "description")
-    ordering_fields = ("updated_at", "created_at", "title")
-    ordering = ("-updated_at",)
-
-    def get_queryset(self):
-        return get_admin_about_sections()
-
-
-class AdminCabinetCalendarViewSet(AdminCrudEndpointMixin):
     serializer_class = AdminCabinetCalendarSerializer
-    permission_classes = [IsAdminPanelUser]
-    filterset_fields = ("is_active", "provider")
-    search_fields = ("title", "description", "provider")
-    ordering_fields = ("display_order", "updated_at", "title")
-    ordering = ("display_order", "-updated_at", "title")
 
-    def get_queryset(self):
-        return get_admin_cabinet_calendars()
+    def get_object(self):
+        return get_admin_cabinet_calendar() or get_or_build_cabinet_calendar()
+
+    def get(self, request):
+        instance = self.get_object()
+        serializer = AdminCabinetCalendarSerializer(instance, context={"request": request})
+        return success_response(serializer.data, message="Cabinet calendar retrieved successfully")
+
+    def put(self, request):
+        return self._save(request, partial=False)
+
+    def patch(self, request):
+        return self._save(request, partial=True)
+
+    def _save(self, request, partial):
+        instance = get_admin_cabinet_calendar()
+        serializer = AdminCabinetCalendarSerializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        save_kwargs = {"is_active": True, "updated_by": request.user}
+        if instance is None:
+            save_kwargs["created_by"] = request.user
+        serializer.save(**save_kwargs)
+        return success_response(serializer.data, message="Cabinet calendar updated successfully")

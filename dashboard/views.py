@@ -3,13 +3,13 @@ from django.contrib.auth import login, logout
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, FormView, ListView, TemplateView, UpdateView
 
-from about.models import AboutSection, CabinetCalendar
+from about.models import CabinetCalendar
 from academic.models import CountdownEvent, QuickDownloadItem, RepositoryMaterial, YouTubeSection
 from analytics_dashboard.services import build_dashboard_summary, build_recent_ticket_log
 from aspirations.models import AspirationSubmission
@@ -17,7 +17,6 @@ from aspirations.services import set_featured_state, update_aspiration_submissio
 from career.models import CareerResourceConfiguration
 from competency.models import AgendaCard
 from dashboard.forms import (
-    AboutSectionForm,
     AgendaCardForm,
     AspirationUpdateForm,
     CabinetCalendarForm,
@@ -53,6 +52,20 @@ def build_pagination_querystring(request):
     querydict = request.GET.copy()
     querydict.pop("page", None)
     return querydict.urlencode()
+
+
+def build_repository_slots(section):
+    items = list(
+        RepositoryMaterial.objects.filter(section=section)
+        .order_by("display_order", "title")[: RepositoryMaterial.MAX_ITEMS_PER_SECTION]
+    )
+    return [
+        {
+            "number": index + 1,
+            "item": items[index] if index < len(items) else None,
+        }
+        for index in range(RepositoryMaterial.MAX_ITEMS_PER_SECTION)
+    ]
 
 
 class AdminRootRedirectView(View):
@@ -108,7 +121,7 @@ class DashboardHomeView(DashboardPageMixin, TemplateView):
         context["daily_visitors"] = summary["charts"]["daily_visitors_last_30_days"]
         context["recent_logs"] = build_recent_ticket_log(limit=10)
         context["quick_links"] = [
-            {"title": "Tentang Kami", "url": reverse("dashboard:about"), "description": "Edit section dan kalender kabinet."},
+            {"title": "Tentang Kami", "url": reverse("dashboard:about"), "description": "Kelola kalender kabinet."},
             {"title": "Akademik", "url": reverse("dashboard:academic"), "description": "Kelola quick downloads, repo, YouTube, dan countdown."},
             {"title": "Kompetensi", "url": reverse("dashboard:competency"), "description": "Kelola agenda cards kompetensi."},
             {"title": "Karir", "url": reverse("dashboard:career"), "description": "Kelola resource link karir."},
@@ -121,36 +134,35 @@ class DashboardHomeView(DashboardPageMixin, TemplateView):
 class AboutSettingsView(DashboardPageMixin, TemplateView):
     template_name = "dashboard/about_page.html"
     page_title = "Tentang Kami"
-    page_description = "Update konten section Tentang Kami dan kalender kabinet."
+    page_description = "Kelola kalender kabinet."
     sidebar_section = "about"
 
     def get_breadcrumbs(self):
         return [("Tentang Kami", None)]
 
-    def get_section_instance(self):
-        return get_singleton_instance(AboutSection, defaults={"is_active": True})
+    def get_calendar_instance(self):
+        return get_singleton_instance(CabinetCalendar, defaults={"is_active": True})
 
-    def get_form(self):
-        return AboutSectionForm(instance=self.get_section_instance())
+    def get_calendar_form(self):
+        return CabinetCalendarForm(instance=self.get_calendar_instance())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.setdefault("form", self.get_form())
-        context["calendar_items"] = CabinetCalendar.objects.all()
+        context.setdefault("calendar_form", self.get_calendar_form())
         return context
 
     def post(self, request, *args, **kwargs):
-        instance = self.get_section_instance()
-        form = AboutSectionForm(request.POST, request.FILES, instance=instance)
-        if form.is_valid():
-            section = form.save(commit=False)
-            section.is_active = True
-            apply_audit_fields(section, request.user)
-            section.save()
-            messages.success(request, "Konten Tentang Kami berhasil diperbarui.")
+        instance = self.get_calendar_instance()
+        calendar_form = CabinetCalendarForm(request.POST, instance=instance)
+        if calendar_form.is_valid():
+            calendar = calendar_form.save(commit=False)
+            calendar.is_active = True
+            apply_audit_fields(calendar, request.user)
+            calendar.save()
+            messages.success(request, "Kalender kabinet berhasil diperbarui.")
             return redirect("dashboard:about")
-        messages.error(request, "Periksa kembali form Tentang Kami.")
-        return self.render_to_response(self.get_context_data(form=form))
+        messages.error(request, "Periksa kembali form Kalender Kabinet.")
+        return self.render_to_response(self.get_context_data(calendar_form=calendar_form))
 
 
 class DashboardObjectFormMixin(DashboardPageMixin, SuccessMessageMixin):
@@ -192,6 +204,10 @@ class CabinetCalendarCreateView(DashboardObjectFormMixin, CreateView):
     success_url = reverse_lazy("dashboard:about")
     success_message = "Kalender kabinet berhasil ditambahkan."
 
+    def dispatch(self, request, *args, **kwargs):
+        messages.info(request, "Kalender kabinet hanya mendukung satu konfigurasi dan diperbarui langsung di halaman Tentang Kami.")
+        return redirect("dashboard:about")
+
     def get_breadcrumbs(self):
         return [("Tentang Kami", reverse("dashboard:about")), ("Tambah Kalender", None)]
 
@@ -206,6 +222,10 @@ class CabinetCalendarUpdateView(DashboardObjectFormMixin, UpdateView):
     success_url = reverse_lazy("dashboard:about")
     success_message = "Kalender kabinet berhasil diperbarui."
 
+    def dispatch(self, request, *args, **kwargs):
+        messages.info(request, "Kalender kabinet diperbarui langsung di halaman Tentang Kami.")
+        return redirect("dashboard:about")
+
     def get_breadcrumbs(self):
         return [("Tentang Kami", reverse("dashboard:about")), ("Edit Kalender", None)]
 
@@ -218,6 +238,10 @@ class CabinetCalendarDeleteView(DashboardDeleteView):
     cancel_url = reverse_lazy("dashboard:about")
     success_url = reverse_lazy("dashboard:about")
     success_message = "Kalender kabinet berhasil dihapus."
+
+    def dispatch(self, request, *args, **kwargs):
+        messages.info(request, "Kalender kabinet hanya mendukung satu konfigurasi dan tidak memakai hapus item.")
+        return redirect("dashboard:about")
 
     def get_breadcrumbs(self):
         return [("Tentang Kami", reverse("dashboard:about")), ("Hapus Kalender", None)]
@@ -242,8 +266,8 @@ class AcademicOverviewView(DashboardPageMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context.setdefault("youtube_form", self.get_youtube_form())
         context["quick_downloads"] = QuickDownloadItem.objects.all()
-        context["repository_akuntansi"] = RepositoryMaterial.objects.filter(section=RepositoryMaterial.Sections.AKUNTANSI)
-        context["repository_manajemen"] = RepositoryMaterial.objects.filter(section=RepositoryMaterial.Sections.MANAJEMEN)
+        context["repository_akuntansi_slots"] = build_repository_slots(RepositoryMaterial.Sections.AKUNTANSI)
+        context["repository_manajemen_slots"] = build_repository_slots(RepositoryMaterial.Sections.MANAJEMEN)
         context["countdown_events"] = CountdownEvent.objects.all()
         return context
 
@@ -312,8 +336,72 @@ class RepositoryMaterialCreateView(DashboardObjectFormMixin, CreateView):
     success_url = reverse_lazy("dashboard:academic")
     success_message = "Item repository berhasil ditambahkan."
 
+    def dispatch(self, request, *args, **kwargs):
+        messages.info(request, "Repo bahan kuliah memakai slot tetap dan hanya bisa diedit.")
+        return redirect("dashboard:academic")
+
     def get_breadcrumbs(self):
         return [("Akademik", reverse("dashboard:academic")), ("Tambah Repository", None)]
+
+
+class RepositoryMaterialSlotUpdateView(DashboardObjectFormMixin, FormView):
+    form_class = RepositoryMaterialForm
+    template_name = "dashboard/object_form.html"
+    sidebar_section = "academic"
+    cancel_url = reverse_lazy("dashboard:academic")
+    success_url = reverse_lazy("dashboard:academic")
+    success_message = "Item repository berhasil diperbarui."
+
+    def get_section(self):
+        section = self.kwargs["section"]
+        valid_sections = {choice[0] for choice in RepositoryMaterial.Sections.choices}
+        if section not in valid_sections:
+            raise Http404("Section repository tidak ditemukan.")
+        return section
+
+    def get_slot_number(self):
+        slot = int(self.kwargs["slot"])
+        if slot < 1 or slot > RepositoryMaterial.MAX_ITEMS_PER_SECTION:
+            raise Http404("Slot repository tidak ditemukan.")
+        return slot
+
+    def get_section_label(self):
+        return dict(RepositoryMaterial.Sections.choices)[self.get_section()]
+
+    def get_instance(self):
+        if not hasattr(self, "_repository_instance"):
+            self._repository_instance = RepositoryMaterial.objects.filter(
+                section=self.get_section(),
+                display_order=self.get_slot_number(),
+            ).first() or RepositoryMaterial(
+                section=self.get_section(),
+                display_order=self.get_slot_number(),
+            )
+        return self._repository_instance
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["instance"] = self.get_instance()
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["page_title"] = f"Edit Repo {self.get_section_label()}"
+        context["page_heading"] = context["page_title"]
+        context["page_description"] = f"Slot {self.get_slot_number()}"
+        return context
+
+    def get_breadcrumbs(self):
+        return [("Akademik", reverse("dashboard:academic")), (f"{self.get_section_label()} Slot {self.get_slot_number()}", None)]
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.section = self.get_section()
+        self.object.display_order = self.get_slot_number()
+        apply_audit_fields(self.object, self.request.user)
+        self.object.save()
+        messages.success(self.request, self.success_message)
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class RepositoryMaterialUpdateView(DashboardObjectFormMixin, UpdateView):
@@ -338,6 +426,10 @@ class RepositoryMaterialDeleteView(DashboardDeleteView):
     cancel_url = reverse_lazy("dashboard:academic")
     success_url = reverse_lazy("dashboard:academic")
     success_message = "Item repository berhasil dihapus."
+
+    def dispatch(self, request, *args, **kwargs):
+        messages.info(request, "Repo bahan kuliah memakai slot tetap dan hanya bisa diedit.")
+        return redirect("dashboard:academic")
 
     def get_breadcrumbs(self):
         return [("Akademik", reverse("dashboard:academic")), ("Hapus Repository", None)]
@@ -401,6 +493,7 @@ class CompetencyPageView(DashboardPageMixin, ListView):
 class AgendaCardCreateView(DashboardObjectFormMixin, CreateView):
     model = AgendaCard
     form_class = AgendaCardForm
+    template_name = "dashboard/agenda_card_form.html"
     page_title = "Tambah Agenda Kompetensi"
     page_description = "Tambah agenda card baru untuk section kompetensi."
     sidebar_section = "competency-career"
@@ -416,6 +509,7 @@ class AgendaCardCreateView(DashboardObjectFormMixin, CreateView):
 class AgendaCardUpdateView(DashboardObjectFormMixin, UpdateView):
     model = AgendaCard
     form_class = AgendaCardForm
+    template_name = "dashboard/agenda_card_form.html"
     page_title = "Edit Agenda Kompetensi"
     page_description = "Perbarui agenda card kompetensi."
     sidebar_section = "competency-career"

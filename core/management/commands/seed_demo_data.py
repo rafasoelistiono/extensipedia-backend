@@ -15,6 +15,20 @@ from competency.models import AgendaCard
 class Command(BaseCommand):
     help = "Seed demo data for local development."
 
+    @staticmethod
+    def build_agenda_description(topic, audience, highlight):
+        return (
+            f"{topic} dirancang untuk {audience} yang ingin memperkuat portofolio, memperluas jejaring, dan "
+            f"mendapat pengalaman relevan sebelum masuk tahap seleksi berikutnya. Program ini membahas konteks "
+            f"pelaksanaan, alur registrasi, timeline persiapan, serta dokumen yang perlu disiapkan sejak awal agar "
+            f"peserta tidak kehilangan momentum ketika deadline mendekat. Selain itu, peserta akan mendapatkan "
+            f"gambaran manfaat praktis dari kegiatan ini, mulai dari latihan problem solving, penguatan presentasi, "
+            f"hingga evaluasi hasil akhir yang bisa dipakai sebagai bahan refleksi pribadi maupun pengembangan karier. "
+            f"{highlight} Informasi ini sengaja ditulis lebih detail agar konten short description memenuhi kebutuhan "
+            f"ringkasan yang tetap informatif, mudah dipahami, dan cukup panjang untuk dipakai di panel admin maupun "
+            f"payload API tanpa perlu tambahan teks lain."
+        )
+
     def handle(self, *args, **options):
         self.seed_about()
         self.seed_academic()
@@ -68,7 +82,11 @@ class Command(BaseCommand):
 
         repository_items = [
             ("akuntansi", "Akuntansi Dasar", "https://drive.google.com/file/d/123/view", 1),
+            ("akuntansi", "Akuntansi Keuangan Menengah", "https://drive.google.com/file/d/124/view", 2),
+            ("akuntansi", "Akuntansi Biaya", "https://drive.google.com/file/d/125/view", 3),
             ("manajemen", "Pengantar Manajemen", "https://drive.google.com/file/d/456/view", 1),
+            ("manajemen", "Manajemen Pemasaran", "https://drive.google.com/file/d/457/view", 2),
+            ("manajemen", "Manajemen Operasional", "https://drive.google.com/file/d/458/view", 3),
         ]
         for section, title, link, order in repository_items:
             RepositoryMaterial.objects.update_or_create(
@@ -102,31 +120,37 @@ class Command(BaseCommand):
         agenda_items = [
             {
                 "title": "Business Case Competition 2026",
-                "short_description": "Kompetisi nasional untuk mahasiswa ekonomi dan bisnis.",
-                "urgency_tag": "segera",
-                "recommendation_tag": "rekomendasi BEM",
+                "short_description": self.build_agenda_description(
+                    "Business Case Competition 2026",
+                    "mahasiswa ekonomi dan bisnis yang ingin menambah pengalaman kompetitif tingkat nasional",
+                    "Peserta juga didorong menyiapkan analisis pasar, strategi implementasi, dan simulasi presentasi tim.",
+                ),
+                "urgency_tag": True,
+                "recommendation_tag": True,
                 "category_tag": "lomba",
                 "scope_tag": "nasional",
-                "pricing_tag": "gratis",
+                "pricing_tag": "tidak berbayar",
                 "deadline_date": timezone.localdate() + timedelta(days=10),
                 "registration_link": "https://example.com/register-bcc",
                 "google_calendar_link": "",
                 "is_active": True,
-                "sort_order": 1,
             },
             {
                 "title": "Workshop CV Global",
-                "short_description": "Pelatihan CV dan LinkedIn untuk peluang internasional.",
-                "urgency_tag": "minggu ini",
-                "recommendation_tag": "rekomendasi BEM",
+                "short_description": self.build_agenda_description(
+                    "Workshop CV Global",
+                    "peserta yang sedang menyiapkan CV, LinkedIn, dan strategi aplikasi untuk peluang internasional",
+                    "Materi akan menekankan penyusunan narasi pengalaman, penyesuaian kata kunci, dan review kesalahan umum yang sering membuat aplikasi kurang menonjol.",
+                ),
+                "urgency_tag": False,
+                "recommendation_tag": True,
                 "category_tag": "workshop",
                 "scope_tag": "internasional",
-                "pricing_tag": "gratis",
+                "pricing_tag": "berbayar",
                 "deadline_date": timezone.localdate() + timedelta(days=14),
                 "registration_link": "https://example.com/register-workshop",
                 "google_calendar_link": "",
                 "is_active": True,
-                "sort_order": 2,
             },
         ]
         for item in agenda_items:

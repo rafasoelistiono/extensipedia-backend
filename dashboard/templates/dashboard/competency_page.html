@@ -6,7 +6,7 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h2 class="h6 mb-1">Agenda Cards</h2>
-                <p class="text-muted small mb-0">Maksimal 15 card. Urutan mengikuti sort order lalu deadline terdekat.</p>
+                <p class="text-muted small mb-0">Maksimal 15 card. Agenda terbaru tampil paling atas.</p>
             </div>
             <a href="{% url 'dashboard:agenda-card-create' %}" class="btn btn-dark btn-sm">Tambah Agenda</a>
         </div>
@@ -17,7 +17,7 @@
                     {% for item in agenda_cards %}
                         <tr>
                             <td><div class="fw-semibold">{{ item.title }}</div><div class="small text-muted">{{ item.short_description|truncatechars:90 }}</div></td>
-                            <td class="small"><span class="badge text-bg-light">{{ item.category_tag }}</span> <span class="badge text-bg-light">{{ item.scope_tag }}</span> <span class="badge text-bg-light">{{ item.pricing_tag }}</span></td>
+                            <td class="small"><span class="badge text-bg-light">{{ item.get_category_tag_display }}</span> <span class="badge text-bg-light">{{ item.get_scope_tag_display }}</span> <span class="badge text-bg-light">{{ item.get_pricing_tag_display }}</span></td>
                             <td>{{ item.deadline_date|date:"d M Y" }}</td>
                             <td><span class="badge {% if item.is_active %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ item.is_active|yesno:"Active,Inactive" }}</span></td>
                             <td class="text-end">
@@ -35,4 +35,3 @@
     </div>
 </div>
 {% endblock %}
-

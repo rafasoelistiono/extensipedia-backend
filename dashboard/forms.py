@@ -2,11 +2,17 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 
-from about.models import AboutSection, CabinetCalendar
+from about.models import CabinetCalendar
 from academic.models import CountdownEvent, QuickDownloadItem, RepositoryMaterial, YouTubeSection
 from aspirations.models import AspirationSubmission
 from career.models import CareerResourceConfiguration
 from competency.models import AgendaCard
+
+
+def coerce_boolean_choice(value):
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() == "true"
 
 
 class BootstrapFormMixin:
@@ -16,7 +22,7 @@ class BootstrapFormMixin:
             if isinstance(widget, forms.CheckboxInput):
                 widget.attrs["class"] = "form-check-input"
             elif isinstance(widget, forms.RadioSelect):
-                widget.attrs["class"] = "form-check-input"
+                widget.attrs["class"] = "form-check-input dashboard-radio-input"
             elif isinstance(widget, forms.FileInput):
                 widget.attrs["class"] = "form-control"
             else:
@@ -62,19 +68,10 @@ class DashboardModelForm(BootstrapFormMixin, forms.ModelForm):
     pass
 
 
-class AboutSectionForm(DashboardModelForm):
-    class Meta:
-        model = AboutSection
-        fields = ("title", "subtitle", "description", "image")
-        widgets = {
-            "description": forms.Textarea(attrs={"rows": 5}),
-        }
-
-
 class CabinetCalendarForm(DashboardModelForm):
     class Meta:
         model = CabinetCalendar
-        fields = ("title", "description", "embed_url", "embed_code", "display_order", "is_active")
+        fields = ("title", "description", "embed_url", "embed_code")
         widgets = {
             "description": forms.Textarea(attrs={"rows": 3}),
             "embed_code": forms.Textarea(attrs={"rows": 4}),
@@ -94,6 +91,9 @@ class QuickDownloadForm(DashboardModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["source_type"].help_text = "Pilih apakah item ini memakai upload file atau tautan eksternal."
+        self.fields["file"].help_text = "Unggah file jika tipe sumber menggunakan file upload."
+        self.fields["external_url"].help_text = "Isi URL jika tipe sumber menggunakan external link."
         if self.instance and self.instance.pk:
             self.fields["source_type"].initial = "file" if self.instance.file else "link"
         else:
@@ -129,7 +129,7 @@ class QuickDownloadForm(DashboardModelForm):
 class RepositoryMaterialForm(DashboardModelForm):
     class Meta:
         model = RepositoryMaterial
-        fields = ("section", "title", "google_drive_link", "display_order")
+        fields = ("title", "google_drive_link")
 
 
 class YouTubeSectionForm(DashboardModelForm):
@@ -159,6 +159,19 @@ class CountdownEventForm(DashboardModelForm):
 
 
 class AgendaCardForm(DashboardModelForm):
+    BOOLEAN_TAG_CHOICES = ((True, "True"), (False, "False"))
+
+    urgency_tag = forms.TypedChoiceField(
+        choices=BOOLEAN_TAG_CHOICES,
+        coerce=coerce_boolean_choice,
+        widget=forms.RadioSelect,
+    )
+    recommendation_tag = forms.TypedChoiceField(
+        choices=BOOLEAN_TAG_CHOICES,
+        coerce=coerce_boolean_choice,
+        widget=forms.RadioSelect,
+    )
+
     class Meta:
         model = AgendaCard
         fields = (
@@ -173,12 +186,20 @@ class AgendaCardForm(DashboardModelForm):
             "registration_link",
             "google_calendar_link",
             "is_active",
-            "sort_order",
         )
         widgets = {
-            "short_description": forms.Textarea(attrs={"rows": 3}),
+            "short_description": forms.Textarea(attrs={"rows": 8, "minlength": 500}),
+            "category_tag": forms.RadioSelect(),
+            "scope_tag": forms.RadioSelect(),
+            "pricing_tag": forms.RadioSelect(),
             "deadline_date": forms.DateInput(attrs={"type": "date"}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["short_description"].help_text = "Minimal 500 karakter."
+        self.fields["urgency_tag"].help_text = "Gunakan nilai boolean true atau false."
+        self.fields["recommendation_tag"].help_text = "Gunakan nilai boolean true atau false."
 
 
 class CareerResourceConfigurationForm(DashboardModelForm):

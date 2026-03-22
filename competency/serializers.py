@@ -53,7 +53,6 @@ class AgendaCardPublicSerializer(serializers.ModelSerializer):
             "deadline_date",
             "registration_link",
             "google_calendar_link",
-            "sort_order",
             "countdown_days",
         )
         read_only_fields = fields

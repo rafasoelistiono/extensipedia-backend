@@ -1,18 +1,20 @@
-from rest_framework.routers import SimpleRouter
+from django.urls import path
 
 from about.views import (
-    AdminAboutSectionViewSet,
-    AdminCabinetCalendarViewSet,
+    AdminCabinetCalendarView,
     AdminHeroSectionViewSet,
     AdminLeadershipMemberViewSet,
     AdminOrganizationProfileViewSet,
 )
 
+from rest_framework.routers import SimpleRouter
+
 router = SimpleRouter()
 router.register("profiles", AdminOrganizationProfileViewSet, basename="admin-profiles")
 router.register("leadership", AdminLeadershipMemberViewSet, basename="admin-leadership")
 router.register("heroes", AdminHeroSectionViewSet, basename="admin-heroes")
-router.register("tentang-kami", AdminAboutSectionViewSet, basename="admin-tentang-kami")
-router.register("cabinet-calendars", AdminCabinetCalendarViewSet, basename="admin-cabinet-calendars")
 
-urlpatterns = router.urls
+urlpatterns = [
+    path("cabinet-calendar/", AdminCabinetCalendarView.as_view(), name="admin-cabinet-calendar"),
+]
+urlpatterns += router.urls
