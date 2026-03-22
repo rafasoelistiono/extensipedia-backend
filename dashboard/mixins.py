@@ -1,22 +1,51 @@
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 
 
-class SuperuserRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+class DashboardAccessRequiredMixin(LoginRequiredMixin):
     login_url = "dashboard:login"
+    required_dashboard_sections = ()
 
-    def test_func(self):
-        return bool(self.request.user.is_authenticated and self.request.user.is_superuser)
+    def get_required_dashboard_sections(self):
+        if self.required_dashboard_sections:
+            return tuple(self.required_dashboard_sections)
+        sidebar_section = getattr(self, "sidebar_section", "")
+        sidebar_subsection = getattr(self, "sidebar_subsection", "")
+
+        if sidebar_section == "dashboard":
+            return ("dashboard",)
+        if sidebar_section == "about":
+            return ("about",)
+        if sidebar_section == "academic":
+            return ("academic",)
+        if sidebar_section == "profile":
+            return ("profile",)
+        if sidebar_section == "competency-career":
+            return (sidebar_subsection,) if sidebar_subsection else ()
+        if sidebar_section == "advocacy":
+            return (sidebar_subsection,) if sidebar_subsection else ()
+        return ()
+
+    def has_dashboard_access(self):
+        user = self.request.user
+        if not (user and user.is_authenticated and user.can_access_admin_panel):
+            return False
+        return all(user.can_access_dashboard_section(section) for section in self.get_required_dashboard_sections())
 
     def handle_no_permission(self):
-        if self.request.user.is_authenticated:
-            raise PermissionDenied("Only superadmin users can access this page.")
+        if self.request.user.is_authenticated and self.request.user.can_access_admin_panel:
+            raise PermissionDenied("You do not have access to this dashboard section.")
         return super().handle_no_permission()
 
+    def dispatch(self, request, *args, **kwargs):
+        if not self.has_dashboard_access():
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
 
-class DashboardPageMixin(SuperuserRequiredMixin):
+
+class DashboardPageMixin(DashboardAccessRequiredMixin):
     page_title = ""
     page_heading = ""
     page_description = ""
@@ -35,6 +64,7 @@ class DashboardPageMixin(SuperuserRequiredMixin):
         context.setdefault("sidebar_section", self.sidebar_section)
         context.setdefault("sidebar_subsection", self.sidebar_subsection)
         context.setdefault("breadcrumbs", self.get_breadcrumbs())
+        context.setdefault("allowed_dashboard_sections", tuple(self.request.user.dashboard_allowed_sections))
         return context
 
 
@@ -56,7 +86,7 @@ class DeleteMessageMixin:
         return response
 
 
-class PostActionMessageMixin(SuperuserRequiredMixin):
+class PostActionMessageMixin(DashboardAccessRequiredMixin):
     success_message = ""
 
     def post(self, request, *args, **kwargs):

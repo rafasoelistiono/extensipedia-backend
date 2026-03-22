@@ -8,9 +8,9 @@
     <div class="d-flex align-items-center gap-3">
         <div class="text-end">
             <div class="fw-semibold">{{ request.user.full_name|default:request.user.email }}</div>
-            <div class="small text-muted">Superadmin</div>
+            <div class="small text-muted">{{ request.user.dashboard_role_label }}</div>
         </div>
+        <a class="btn btn-outline-dark btn-sm" href="{% url 'dashboard:profile' %}">Profile</a>
         <a class="btn btn-outline-secondary btn-sm" href="{% url 'dashboard:logout' %}">Logout</a>
     </div>
 </header>
-

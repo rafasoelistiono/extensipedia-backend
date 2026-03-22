@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth import authenticate
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
 from about.models import CabinetCalendar
@@ -53,10 +53,13 @@ class DashboardLoginForm(BootstrapFormMixin, forms.Form):
         password = cleaned_data.get("password")
 
         if username and password:
-            self.user_cache = authenticate(self.request, username=username, password=password)
+            user_model = get_user_model()
+            self.user_cache = user_model.objects.filter(dashboard_username__iexact=username).first()
             if self.user_cache is None:
+                self.user_cache = user_model.objects.filter(email__iexact=username).first()
+            if self.user_cache is None or not self.user_cache.check_password(password):
                 raise forms.ValidationError(self.error_messages["invalid_login"])
-            if not self.user_cache.is_superuser:
+            if not self.user_cache.can_access_admin_panel:
                 raise forms.ValidationError(self.error_messages["no_access"])
         return cleaned_data
 
@@ -234,3 +237,53 @@ class AspirationUpdateForm(DashboardModelForm):
 
 class TicketSearchForm(BootstrapFormMixin, forms.Form):
     q = forms.CharField(required=False, label="Cari tiket", max_length=255)
+
+
+class DashboardProfileForm(BootstrapFormMixin, forms.Form):
+    username = forms.CharField(label="Username", max_length=150)
+    new_password1 = forms.CharField(
+        label="Password Baru",
+        widget=forms.PasswordInput,
+        required=False,
+    )
+    new_password2 = forms.CharField(
+        label="Konfirmasi Password Baru",
+        widget=forms.PasswordInput,
+        required=False,
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+        self.fields["username"].initial = user.dashboard_username
+        self.fields["username"].help_text = "Username ini dipakai untuk login ke dashboard admin."
+        self.fields["new_password1"].help_text = "Kosongkan jika tidak ingin mengganti password."
+
+    def clean_username(self):
+        username = self.cleaned_data["username"].strip()
+        user_model = get_user_model()
+        if user_model.objects.exclude(pk=self.user.pk).filter(dashboard_username__iexact=username).exists():
+            raise forms.ValidationError("Username ini sudah digunakan akun lain.")
+        return username
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("new_password1")
+        password2 = cleaned_data.get("new_password2")
+
+        if password1 or password2:
+            if password1 != password2:
+                raise forms.ValidationError("Konfirmasi password baru tidak cocok.")
+            if len(password1) < 8:
+                raise forms.ValidationError("Password baru minimal 8 karakter.")
+        return cleaned_data
+
+    def save(self):
+        self.user.dashboard_username = self.cleaned_data["username"]
+        update_fields = ["dashboard_username"]
+        password = self.cleaned_data.get("new_password1")
+        if password:
+            self.user.set_password(password)
+            update_fields.append("password")
+        self.user.save(update_fields=update_fields)
+        return self.user

@@ -4,25 +4,47 @@
         <div class="small text-secondary">Custom Admin</div>
     </div>
     <nav class="sidebar-nav">
-        <a class="sidebar-link {% if sidebar_section == 'dashboard' %}active{% endif %}" href="{% url 'dashboard:home' %}">
-            <i class="bi bi-grid-1x2"></i><span>Dashboard</span>
-        </a>
-        <a class="sidebar-link {% if sidebar_section == 'about' %}active{% endif %}" href="{% url 'dashboard:about' %}">
-            <i class="bi bi-info-circle"></i><span>Tentang Kami</span>
-        </a>
-        <a class="sidebar-link {% if sidebar_section == 'academic' %}active{% endif %}" href="{% url 'dashboard:academic' %}">
-            <i class="bi bi-journal-bookmark"></i><span>Akademik</span>
-        </a>
-        <div class="sidebar-group {% if sidebar_section == 'competency-career' %}open{% endif %}">
-            <div class="sidebar-group-title">Kompetensi &amp; Karir</div>
-            <a class="sidebar-sublink {% if sidebar_subsection == 'competency' %}active{% endif %}" href="{% url 'dashboard:competency' %}">Kompetensi</a>
-            <a class="sidebar-sublink {% if sidebar_subsection == 'career' %}active{% endif %}" href="{% url 'dashboard:career' %}">Karir</a>
-        </div>
-        <div class="sidebar-group {% if sidebar_section == 'advocacy' %}open{% endif %}">
-            <div class="sidebar-group-title">Advokasi</div>
-            <a class="sidebar-sublink {% if sidebar_subsection == 'aspirations' %}active{% endif %}" href="{% url 'dashboard:aspiration-list' %}">Aspirasi</a>
-            <a class="sidebar-sublink {% if sidebar_subsection == 'tickets' %}active{% endif %}" href="{% url 'dashboard:ticket-tracking' %}">Lacak Tiket</a>
-        </div>
+        {% if 'dashboard' in allowed_dashboard_sections %}
+            <a class="sidebar-link {% if sidebar_section == 'dashboard' %}active{% endif %}" href="{% url 'dashboard:home' %}">
+                <i class="bi bi-grid-1x2"></i><span>Dashboard</span>
+            </a>
+        {% endif %}
+        {% if 'about' in allowed_dashboard_sections %}
+            <a class="sidebar-link {% if sidebar_section == 'about' %}active{% endif %}" href="{% url 'dashboard:about' %}">
+                <i class="bi bi-info-circle"></i><span>Tentang Kami</span>
+            </a>
+        {% endif %}
+        {% if 'academic' in allowed_dashboard_sections %}
+            <a class="sidebar-link {% if sidebar_section == 'academic' %}active{% endif %}" href="{% url 'dashboard:academic' %}">
+                <i class="bi bi-journal-bookmark"></i><span>Akademik</span>
+            </a>
+        {% endif %}
+        {% if 'competency' in allowed_dashboard_sections or 'career' in allowed_dashboard_sections %}
+            <div class="sidebar-group {% if sidebar_section == 'competency-career' %}open{% endif %}">
+                <div class="sidebar-group-title">Kompetensi &amp; Karir</div>
+                {% if 'competency' in allowed_dashboard_sections %}
+                    <a class="sidebar-sublink {% if sidebar_subsection == 'competency' %}active{% endif %}" href="{% url 'dashboard:competency' %}">Kompetensi</a>
+                {% endif %}
+                {% if 'career' in allowed_dashboard_sections %}
+                    <a class="sidebar-sublink {% if sidebar_subsection == 'career' %}active{% endif %}" href="{% url 'dashboard:career' %}">Karir</a>
+                {% endif %}
+            </div>
+        {% endif %}
+        {% if 'aspirations' in allowed_dashboard_sections or 'tickets' in allowed_dashboard_sections %}
+            <div class="sidebar-group {% if sidebar_section == 'advocacy' %}open{% endif %}">
+                <div class="sidebar-group-title">Advokasi</div>
+                {% if 'aspirations' in allowed_dashboard_sections %}
+                    <a class="sidebar-sublink {% if sidebar_subsection == 'aspirations' %}active{% endif %}" href="{% url 'dashboard:aspiration-list' %}">Aspirasi</a>
+                {% endif %}
+                {% if 'tickets' in allowed_dashboard_sections %}
+                    <a class="sidebar-sublink {% if sidebar_subsection == 'tickets' %}active{% endif %}" href="{% url 'dashboard:ticket-tracking' %}">Lacak Tiket</a>
+                {% endif %}
+            </div>
+        {% endif %}
+        {% if 'profile' in allowed_dashboard_sections %}
+            <a class="sidebar-link {% if sidebar_section == 'profile' %}active{% endif %}" href="{% url 'dashboard:profile' %}">
+                <i class="bi bi-person-circle"></i><span>Profile</span>
+            </a>
+        {% endif %}
     </nav>
 </aside>
-

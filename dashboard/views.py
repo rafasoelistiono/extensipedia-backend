@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, update_session_auth_hash
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -23,6 +23,7 @@ from dashboard.forms import (
     CareerResourceConfigurationForm,
     CountdownEventForm,
     DashboardLoginForm,
+    DashboardProfileForm,
     QuickDownloadForm,
     RepositoryMaterialForm,
     TicketSearchForm,
@@ -70,7 +71,7 @@ def build_repository_slots(section):
 
 class AdminRootRedirectView(View):
     def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated and request.user.is_superuser:
+        if request.user.is_authenticated and request.user.can_access_admin_panel:
             return redirect("dashboard:home")
         if request.user.is_authenticated:
             logout(request)
@@ -82,7 +83,7 @@ class DashboardLoginView(FormView):
     form_class = DashboardLoginForm
 
     def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated and request.user.is_superuser:
+        if request.user.is_authenticated and request.user.can_access_admin_panel:
             return redirect("dashboard:home")
         if request.user.is_authenticated:
             logout(request)
@@ -120,15 +121,57 @@ class DashboardHomeView(DashboardPageMixin, TemplateView):
         context["summary"] = summary["cards"]
         context["daily_visitors"] = summary["charts"]["daily_visitors_last_30_days"]
         context["recent_logs"] = build_recent_ticket_log(limit=10)
-        context["quick_links"] = [
+        quick_links = [
             {"title": "Tentang Kami", "url": reverse("dashboard:about"), "description": "Kelola kalender kabinet."},
             {"title": "Akademik", "url": reverse("dashboard:academic"), "description": "Kelola quick downloads, repo, YouTube, dan countdown."},
             {"title": "Kompetensi", "url": reverse("dashboard:competency"), "description": "Kelola agenda cards kompetensi."},
             {"title": "Karir", "url": reverse("dashboard:career"), "description": "Kelola resource link karir."},
             {"title": "Aspirasi", "url": reverse("dashboard:aspiration-list"), "description": "Moderasi aspirasi dan featured items."},
             {"title": "Lacak Tiket", "url": reverse("dashboard:ticket-tracking"), "description": "Cari tiket dan monitor progres."},
+            {"title": "Profile", "url": reverse("dashboard:profile"), "description": "Ganti username dashboard dan password akun Anda."},
+        ]
+        section_lookup = {
+            "Tentang Kami": "about",
+            "Akademik": "academic",
+            "Kompetensi": "competency",
+            "Karir": "career",
+            "Aspirasi": "aspirations",
+            "Lacak Tiket": "tickets",
+            "Profile": "profile",
+        }
+        context["quick_links"] = [
+            item for item in quick_links if self.request.user.can_access_dashboard_section(section_lookup[item["title"]])
         ]
         return context
+
+
+class DashboardProfileView(DashboardPageMixin, FormView):
+    template_name = "dashboard/object_form.html"
+    form_class = DashboardProfileForm
+    page_title = "Profile"
+    page_description = "Ubah username dashboard dan password akun Anda."
+    sidebar_section = "profile"
+    submit_label = "Simpan Perubahan"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def get_breadcrumbs(self):
+        return [("Profile", None)]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["cancel_url"] = reverse("dashboard:home")
+        context["submit_label"] = self.submit_label
+        return context
+
+    def form_valid(self, form):
+        user = form.save()
+        update_session_auth_hash(self.request, user)
+        messages.success(self.request, "Profile berhasil diperbarui.")
+        return redirect("dashboard:profile")
 
 
 class AboutSettingsView(DashboardPageMixin, TemplateView):
@@ -655,6 +698,7 @@ class AspirationDetailView(DashboardPageMixin, TemplateView):
 
 
 class AspirationFeatureToggleView(PostActionMessageMixin, View):
+    required_dashboard_sections = ("aspirations",)
     success_message = "Featured aspirasi berhasil diperbarui."
 
     def handle_action(self, request, *args, **kwargs):
