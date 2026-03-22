@@ -104,6 +104,19 @@
       box-shadow: var(--shadow);
     }
 
+    .base-url-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .base-url-select {
+      min-width: 180px;
+      max-width: 280px;
+    }
+
     .overall-status-box {
       display: flex;
       align-items: center;
@@ -498,6 +511,14 @@
       <div class="base-url-box">
         <strong>API Base URL:</strong>
         <span id="apiBaseUrlText"></span>
+        <div class="base-url-controls">
+          <label class="field-label" for="apiBaseUrlMode" style="margin: 0;">Base URL Mode</label>
+          <select id="apiBaseUrlMode" class="select base-url-select">
+            <option value="auto">Auto Detect</option>
+            <option value="local">Local 127.0.0.1</option>
+            <option value="railway">Railway Production</option>
+          </select>
+        </div>
       </div>
       <div class="overall-status-box">
         <div>
@@ -709,7 +730,8 @@
   </main>
 
   <script>
-    const API_BASE_URL = "http://127.0.0.1:8000";
+    const LOCAL_API_BASE_URL = "http://127.0.0.1:8000";
+    const RAILWAY_API_BASE_URL = "https://extensipedia-backend-production.up.railway.app";
     const endpoints = {
       cabinetCalendar: "/api/v1/public/about/cabinet-calendar/",
       quickDownloads: "/api/v1/public/academic/quick-downloads",
@@ -752,10 +774,50 @@
     const sectionState = {};
     let competencyItemsCache = [];
     let competencyActiveFilter = "all";
+    let apiBaseUrl = "";
 
-    document.getElementById("apiBaseUrlText").textContent = API_BASE_URL;
-    document.getElementById("submitEndpointLabel").textContent = `${API_BASE_URL}${endpoints.submitAspiration}`;
-    document.getElementById("trackEndpointLabel").textContent = `${API_BASE_URL}${endpoints.trackTicket}?ticket_id=...`;
+    function trimTrailingSlash(value) {
+      return String(value || "").replace(/\/+$/, "");
+    }
+
+    function resolveAutoApiBaseUrl() {
+      if (window.location.protocol.startsWith("http")) {
+        const currentOrigin = trimTrailingSlash(window.location.origin);
+        const hostname = window.location.hostname || "";
+
+        if (hostname === "127.0.0.1" || hostname === "localhost") {
+          return currentOrigin;
+        }
+
+        if (hostname.endsWith(".up.railway.app")) {
+          return currentOrigin;
+        }
+      }
+
+      return LOCAL_API_BASE_URL;
+    }
+
+    function getSelectedApiBaseUrl() {
+      const mode = document.getElementById("apiBaseUrlMode")?.value || "auto";
+      if (mode === "local") return LOCAL_API_BASE_URL;
+      if (mode === "railway") return RAILWAY_API_BASE_URL;
+      return resolveAutoApiBaseUrl();
+    }
+
+    function syncBaseUrlUi() {
+      apiBaseUrl = getSelectedApiBaseUrl();
+      document.getElementById("apiBaseUrlText").textContent = apiBaseUrl;
+      document.getElementById("submitEndpointLabel").textContent = `${apiBaseUrl}${endpoints.submitAspiration}`;
+      document.getElementById("trackEndpointLabel").textContent = `${apiBaseUrl}${endpoints.trackTicket}?ticket_id=...`;
+      Object.keys(sectionConfigs).forEach((key) => {
+        const elements = getSectionElements(key);
+        if (elements.endpointLabel) {
+          elements.endpointLabel.textContent = fullUrl(endpoints[key]);
+        }
+      });
+    }
+
+    syncBaseUrlUi();
 
     function escapeHtml(value) {
       return String(value ?? "")
@@ -808,7 +870,7 @@
     }
 
     function fullUrl(path) {
-      return `${API_BASE_URL}${path}`;
+      return `${apiBaseUrl}${path}`;
     }
 
     async function fetchJson(url, options = {}) {
@@ -1315,13 +1377,15 @@
 
     Object.keys(sectionConfigs).forEach((key) => {
       const elements = getSectionElements(key);
-      if (elements.endpointLabel) {
-        elements.endpointLabel.textContent = fullUrl(endpoints[key]);
-      }
       if (elements.fetchButton) {
         elements.fetchButton.addEventListener("click", () => fetchSection(key, elements));
       }
       clearGetSection(key);
+    });
+
+    document.getElementById("apiBaseUrlMode").addEventListener("change", () => {
+      syncBaseUrlUi();
+      clearAll();
     });
 
     document.getElementById("fetchAllBtn").addEventListener("click", fetchAllGetApis);
