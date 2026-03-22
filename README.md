@@ -222,6 +222,35 @@ python manage.py test about.tests --settings=config.settings.test
 python manage.py test dashboard.tests --settings=config.settings.test
 ```
 
+## Deploy Ke Railway
+
+Repo ini sudah disiapkan untuk Railway dengan:
+
+- [railway.toml](c:/projek/extensipedia-backend/railway.toml)
+- [railway.env.example](c:/projek/extensipedia-backend/railway.env.example)
+
+Langkah singkat:
+
+1. push repo ke GitHub
+2. buat project baru di Railway dari repo ini
+3. tambahkan service PostgreSQL
+4. buka tab `Variables` pada service backend
+5. copy isi [railway.env.example](c:/projek/extensipedia-backend/railway.env.example) ke `RAW Editor`
+6. ganti `DJANGO_SECRET_KEY`, email SMTP, dan pastikan nama service database di `DATABASE_URL=${{Postgres.DATABASE_URL}}` sesuai nama service PostgreSQL Railway Anda
+7. deploy ulang
+
+Catatan:
+
+- `DJANGO_ALLOWED_HOSTS` sudah mencakup `.up.railway.app` dan `healthcheck.railway.app`
+- `DJANGO_CSRF_TRUSTED_ORIGINS` sudah disiapkan untuk domain Railway wildcard
+- `DJANGO_SECURE_SSL_REDIRECT=False` dan `DJANGO_SECURE_HSTS_SECONDS=0` dipakai lebih dulu agar deploy awal lebih aman dari masalah redirect/healthcheck
+- setelah domain Railway sudah stabil, Anda bisa mengaktifkan lagi:
+
+```env
+DJANGO_SECURE_SSL_REDIRECT=True
+DJANGO_SECURE_HSTS_SECONDS=31536000
+```
+
 ## Seed Demo Data
 
 Untuk mengisi data contoh:
