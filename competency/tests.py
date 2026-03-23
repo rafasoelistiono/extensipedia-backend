@@ -31,20 +31,17 @@ def unwrap_response_data(response):
 
 def build_short_description(seed):
     return (
-        f"{seed} disusun untuk memberikan gambaran menyeluruh mengenai manfaat kegiatan, target peserta, alur "
-        f"pendaftaran, dan strategi persiapan yang sebaiknya dilakukan sejak awal. Ringkasan ini menjelaskan "
-        f"ekspektasi output, kebutuhan dokumen, pentingnya manajemen waktu, serta alasan mengapa kegiatan ini "
-        f"relevan untuk pengembangan akademik dan profesional peserta. Informasi juga menekankan detail teknis "
-        f"yang sering terlewat, mulai dari tenggat administrasi, penyesuaian profil, latihan presentasi, sampai "
-        f"pemanfaatan hasil akhir sebagai portofolio yang lebih kuat setelah program selesai dijalankan."
+        f"{seed} memberi ringkasan singkat tentang manfaat kegiatan, target peserta, dokumen penting, "
+        f"dan langkah persiapan utama agar pendaftaran lebih terarah serta hasil program bisa dipakai "
+        f"untuk penguatan portofolio akademik maupun profesional."
     )
 
 
 class AgendaCardModelTests(TestCase):
-    def test_short_description_requires_minimum_500_characters(self):
+    def test_short_description_rejects_text_over_300_characters(self):
         agenda = AgendaCard(
             title="Agenda Singkat",
-            short_description="a" * 499,
+            short_description="a" * 301,
             urgency_tag=True,
             recommendation_tag=False,
             category_tag=AgendaCard.CategoryTag.WORKSHOP,

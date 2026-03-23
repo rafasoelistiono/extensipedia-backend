@@ -18,15 +18,9 @@ class Command(BaseCommand):
     @staticmethod
     def build_agenda_description(topic, audience, highlight):
         return (
-            f"{topic} dirancang untuk {audience} yang ingin memperkuat portofolio, memperluas jejaring, dan "
-            f"mendapat pengalaman relevan sebelum masuk tahap seleksi berikutnya. Program ini membahas konteks "
-            f"pelaksanaan, alur registrasi, timeline persiapan, serta dokumen yang perlu disiapkan sejak awal agar "
-            f"peserta tidak kehilangan momentum ketika deadline mendekat. Selain itu, peserta akan mendapatkan "
-            f"gambaran manfaat praktis dari kegiatan ini, mulai dari latihan problem solving, penguatan presentasi, "
-            f"hingga evaluasi hasil akhir yang bisa dipakai sebagai bahan refleksi pribadi maupun pengembangan karier. "
-            f"{highlight} Informasi ini sengaja ditulis lebih detail agar konten short description memenuhi kebutuhan "
-            f"ringkasan yang tetap informatif, mudah dipahami, dan cukup panjang untuk dipakai di panel admin maupun "
-            f"payload API tanpa perlu tambahan teks lain."
+            f"{topic} dirancang untuk {audience}. Agenda ini merangkum manfaat utama, alur pendaftaran, "
+            f"dokumen yang perlu disiapkan, dan fokus persiapan agar peserta lebih siap menghadapi deadline. "
+            f"{highlight}"
         )
 
     def handle(self, *args, **options):

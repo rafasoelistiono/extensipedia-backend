@@ -1,5 +1,5 @@
 from django.core.exceptions import ValidationError
-from django.core.validators import MinLengthValidator
+from django.core.validators import MaxLengthValidator
 from django.db import models
 
 from core.models import BaseModel, SlugModelMixin, image_upload_to
@@ -42,7 +42,7 @@ class AgendaCard(BaseModel):
         TIDAK_BERBAYAR = "tidak berbayar", "Tidak Berbayar"
 
     title = models.CharField(max_length=255)
-    short_description = models.TextField(validators=[MinLengthValidator(500)])
+    short_description = models.TextField(validators=[MaxLengthValidator(300)])
     urgency_tag = models.BooleanField(default=False)
     recommendation_tag = models.BooleanField(default=False)
     category_tag = models.CharField(max_length=100, choices=CategoryTag.choices)

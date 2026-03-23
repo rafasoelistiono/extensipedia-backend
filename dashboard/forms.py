@@ -191,7 +191,7 @@ class AgendaCardForm(DashboardModelForm):
             "is_active",
         )
         widgets = {
-            "short_description": forms.Textarea(attrs={"rows": 8, "minlength": 500}),
+            "short_description": forms.Textarea(attrs={"rows": 8, "maxlength": 300}),
             "category_tag": forms.RadioSelect(),
             "scope_tag": forms.RadioSelect(),
             "pricing_tag": forms.RadioSelect(),
@@ -200,7 +200,7 @@ class AgendaCardForm(DashboardModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["short_description"].help_text = "Minimal 500 karakter."
+        self.fields["short_description"].help_text = "Maksimal 300 karakter."
         self.fields["urgency_tag"].help_text = "Gunakan nilai boolean true atau false."
         self.fields["recommendation_tag"].help_text = "Gunakan nilai boolean true atau false."
 
