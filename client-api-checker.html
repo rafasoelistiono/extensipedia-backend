@@ -117,6 +117,11 @@
       max-width: 280px;
     }
 
+    .base-url-input {
+      min-width: 280px;
+      max-width: 420px;
+    }
+
     .overall-status-box {
       display: flex;
       align-items: center;
@@ -516,8 +521,17 @@
           <select id="apiBaseUrlMode" class="select base-url-select">
             <option value="auto">Auto Detect</option>
             <option value="local">Local 127.0.0.1</option>
+            <option value="vps">VPS IP</option>
             <option value="railway">Railway Production</option>
+            <option value="custom">Custom URL</option>
           </select>
+          <input
+            id="apiBaseUrlCustom"
+            class="input base-url-input"
+            type="text"
+            placeholder="http://203.194.113.185"
+            style="display:none;"
+          />
         </div>
       </div>
       <div class="overall-status-box">
@@ -731,7 +745,9 @@
 
   <script>
     const LOCAL_API_BASE_URL = "http://127.0.0.1:8000";
+    const VPS_API_BASE_URL = "http://203.194.113.185";
     const RAILWAY_API_BASE_URL = "https://extensipedia-backend-production.up.railway.app";
+    const API_BASE_URL_STORAGE_KEY = "checker.customApiBaseUrl";
     const endpoints = {
       cabinetCalendar: "/api/v1/public/about/cabinet-calendar/",
       quickDownloads: "/api/v1/public/academic/quick-downloads",
@@ -782,29 +798,29 @@
 
     function resolveAutoApiBaseUrl() {
       if (window.location.protocol.startsWith("http")) {
-        const currentOrigin = trimTrailingSlash(window.location.origin);
-        const hostname = window.location.hostname || "";
-
-        if (hostname === "127.0.0.1" || hostname === "localhost") {
-          return currentOrigin;
-        }
-
-        if (hostname.endsWith(".up.railway.app")) {
-          return currentOrigin;
-        }
+        return trimTrailingSlash(window.location.origin);
       }
 
       return LOCAL_API_BASE_URL;
     }
 
+    function getCustomApiBaseUrl() {
+      return trimTrailingSlash(document.getElementById("apiBaseUrlCustom")?.value || "");
+    }
+
     function getSelectedApiBaseUrl() {
       const mode = document.getElementById("apiBaseUrlMode")?.value || "auto";
       if (mode === "local") return LOCAL_API_BASE_URL;
+      if (mode === "vps") return VPS_API_BASE_URL;
       if (mode === "railway") return RAILWAY_API_BASE_URL;
+      if (mode === "custom") return getCustomApiBaseUrl() || VPS_API_BASE_URL;
       return resolveAutoApiBaseUrl();
     }
 
     function syncBaseUrlUi() {
+      const mode = document.getElementById("apiBaseUrlMode")?.value || "auto";
+      const customInput = document.getElementById("apiBaseUrlCustom");
+      customInput.style.display = mode === "custom" ? "block" : "none";
       apiBaseUrl = getSelectedApiBaseUrl();
       document.getElementById("apiBaseUrlText").textContent = apiBaseUrl;
       document.getElementById("submitEndpointLabel").textContent = `${apiBaseUrl}${endpoints.submitAspiration}`;
@@ -817,6 +833,7 @@
       });
     }
 
+    document.getElementById("apiBaseUrlCustom").value = localStorage.getItem(API_BASE_URL_STORAGE_KEY) || "";
     syncBaseUrlUi();
 
     function escapeHtml(value) {
@@ -1386,6 +1403,14 @@
     document.getElementById("apiBaseUrlMode").addEventListener("change", () => {
       syncBaseUrlUi();
       clearAll();
+    });
+
+    document.getElementById("apiBaseUrlCustom").addEventListener("input", (event) => {
+      localStorage.setItem(API_BASE_URL_STORAGE_KEY, event.target.value.trim());
+      if (document.getElementById("apiBaseUrlMode").value === "custom") {
+        syncBaseUrlUi();
+        clearAll();
+      }
     });
 
     document.getElementById("fetchAllBtn").addEventListener("click", fetchAllGetApis);
