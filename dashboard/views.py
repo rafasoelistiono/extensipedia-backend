@@ -624,6 +624,7 @@ class CompetencyWinnerSlideUpdateView(DashboardPageMixin, FormView):
     cancel_url = reverse_lazy("dashboard:competency")
     success_url = reverse_lazy("dashboard:competency")
     success_message = "Gambar winner slide berhasil diperbarui."
+    submit_label = "Update Gambar"
 
     def get_slot_number(self):
         slot = self.kwargs.get("slot")
@@ -648,6 +649,8 @@ class CompetencyWinnerSlideUpdateView(DashboardPageMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["winner_slide"] = self.get_winner_slide()
+        context["cancel_url"] = self.cancel_url
+        context["submit_label"] = self.submit_label
         return context
 
     def get_breadcrumbs(self):
