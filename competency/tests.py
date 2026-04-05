@@ -10,9 +10,11 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from accounts.models import User
 from dashboard.forms import AgendaCardForm
 
 from competency.models import AgendaCard, CompetencyWinnerSlide
+from competency.services import ensure_winner_slide_slots
 
 
 def unwrap_response_data(response):
@@ -124,6 +126,17 @@ class CompetencyWinnerSlideModelTests(TestCase):
             [1, 2, 3, 4, 5],
         )
 
+    def test_missing_winner_slide_slots_can_be_rebuilt_to_exactly_five_records(self):
+        CompetencyWinnerSlide.objects.filter(display_order__in=[2, 4]).delete()
+
+        ensure_winner_slide_slots()
+
+        self.assertEqual(CompetencyWinnerSlide.objects.count(), CompetencyWinnerSlide.MAX_RECORDS)
+        self.assertEqual(
+            list(CompetencyWinnerSlide.objects.order_by("display_order").values_list("display_order", flat=True)),
+            [1, 2, 3, 4, 5],
+        )
+
 
 class CompetencyWinnerSlidePublicApiTests(APITestCase):
     def test_public_winner_slides_only_return_filled_slots_in_slot_order(self):
@@ -140,3 +153,43 @@ class CompetencyWinnerSlidePublicApiTests(APITestCase):
         self.assertEqual(payload[0]["id"], str(visible.id))
         self.assertEqual(payload[0]["display_order"], 2)
         self.assertTrue(payload[0]["image_url"].endswith(".png"))
+
+
+class CompetencyWinnerSlideAdminApiTests(APITestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            email="admin-competency@example.com",
+            password="password123",
+            full_name="Admin Competency",
+            is_staff=True,
+        )
+        self.client.force_authenticate(user=self.admin)
+
+    def test_admin_endpoint_only_allows_read_and_patch_for_fixed_slots(self):
+        response = self.client.post(
+            reverse("admin-competency:admin-competency-winner-slides-list"),
+            {
+                "display_order": 1,
+                "alt_text": "Should not create",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_admin_patch_cannot_change_display_order(self):
+        slide = CompetencyWinnerSlide.objects.get(display_order=1)
+
+        response = self.client.patch(
+            reverse("admin-competency:admin-competency-winner-slides-detail", args=[slide.pk]),
+            {
+                "display_order": 4,
+                "alt_text": "Updated alt text",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        slide.refresh_from_db()
+        self.assertEqual(slide.display_order, 1)
+        self.assertEqual(slide.alt_text, "Updated alt text")

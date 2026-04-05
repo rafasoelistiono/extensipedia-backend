@@ -1,4 +1,5 @@
 from competency.models import AgendaCard, CompetencyProgram, CompetencyWinnerSlide
+from competency.services import winner_slide_table_exists
 
 
 BOOLEAN_QUERY_VALUES = {
@@ -55,6 +56,8 @@ def get_admin_agenda_cards():
 
 
 def get_public_winner_slides():
+    if not winner_slide_table_exists():
+        return CompetencyWinnerSlide.objects.none()
     return (
         CompetencyWinnerSlide.objects.exclude(image="")
         .filter(image__isnull=False)
@@ -64,4 +67,6 @@ def get_public_winner_slides():
 
 
 def get_admin_winner_slides():
+    if not winner_slide_table_exists():
+        return CompetencyWinnerSlide.objects.none()
     return CompetencyWinnerSlide.objects.select_related("created_by", "updated_by").order_by("display_order", "-updated_at")

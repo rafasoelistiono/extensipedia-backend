@@ -1102,7 +1102,7 @@
       return `<div class="list">${items.map((item) => `
         <div class="mini-card">
           <h4>Slot ${escapeHtml(item.display_order ?? "N/A")}</h4>
-          ${item.image_url ? `<img class="image-preview" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.alt_text || item.title || "Winner slide")}" />` : '<div class="preview-empty">No image</div>'}
+          ${item.image_url ? `<img class="image-preview" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.alt_text || ("Winner slide " + (item.display_order ?? "")).trim())}" />` : '<div class="preview-empty">No image</div>'}
           ${createField("Alt Text", escapeHtml(item.alt_text || "N/A"))}
         </div>
       `).join("")}</div>`;

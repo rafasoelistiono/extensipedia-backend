@@ -64,19 +64,15 @@ class AgendaCardPublicSerializer(serializers.ModelSerializer):
 class CompetencyWinnerSlideAdminSerializer(BaseModelSerializer):
     class Meta:
         model = CompetencyWinnerSlide
-        fields = "__all__"
-        read_only_fields = BaseModelSerializer.Meta.read_only_fields
-
-    def validate(self, attrs):
-        queryset = CompetencyWinnerSlide.objects.all()
-        if self.instance:
-            queryset = queryset.exclude(pk=self.instance.pk)
-
-        if queryset.count() >= CompetencyWinnerSlide.MAX_RECORDS and self.instance is None:
-            raise serializers.ValidationError(
-                f"Winner slides support a maximum of {CompetencyWinnerSlide.MAX_RECORDS} records."
-            )
-        return attrs
+        fields = (
+            "id",
+            "image",
+            "alt_text",
+            "display_order",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = ("id", "display_order", "created_at", "updated_at")
 
 
 class CompetencyWinnerSlidePublicSerializer(serializers.ModelSerializer):

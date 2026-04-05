@@ -419,11 +419,13 @@ Apa yang bisa dilakukan frontend:
 - render daftar program kompetensi
 - render agenda card
 - memfilter agenda card sesuai tag
+- render winner slide section dari maksimal 5 slot tetap
 
 | Method | Endpoint | Kegunaan |
 |---|---|---|
 | GET | `/api/v1/public/competency/programs/` | List program kompetensi |
 | GET | `/api/v1/public/competency/programs/{id}/` | Detail program kompetensi |
+| GET | `/api/v1/public/competency/winner-slides/` | List winner slide yang sudah terisi gambar |
 | GET | `/api/v1/public/competency/agenda-cards/` | List agenda card |
 | GET | `/api/v1/public/competency/agenda-cards/{id}/` | Detail agenda card |
 
@@ -436,6 +438,41 @@ Query params penting untuk `agenda-cards`:
 - `category_tag`
 - `scope_tag`
 - `pricing_tag`
+
+Contoh winner slides:
+
+```json
+{
+  "success": true,
+  "message": "Winner slides retrieved successfully",
+  "data": {
+    "items": [
+      {
+        "id": "uuid",
+        "image_url": "http://127.0.0.1:8000/media/competency/winner-slides/slide-1.png",
+        "alt_text": "Juara nasional 2026",
+        "display_order": 1,
+        "updated_at": "2026-04-05T21:00:00+07:00"
+      }
+    ],
+    "pagination": {
+      "count": 1,
+      "next": null,
+      "previous": null,
+      "page": 1,
+      "page_size": 10,
+      "total_pages": 1
+    }
+  }
+}
+```
+
+Catatan frontend winner slides:
+
+- slot bersifat tetap 1 sampai 5
+- endpoint public hanya mengembalikan slot yang sudah punya gambar
+- gunakan `display_order` untuk urutan render di client
+- gunakan `alt_text` sebagai `alt` image
 
 Default ordering:
 
@@ -840,17 +877,21 @@ Apa yang bisa dilakukan frontend admin:
 |---|---|
 | GET/POST | `/api/v1/admin/competency/programs/` |
 | GET/PUT/PATCH/DELETE | `/api/v1/admin/competency/programs/{id}/` |
+| GET | `/api/v1/admin/competency/winner-slides/` |
+| GET/PATCH | `/api/v1/admin/competency/winner-slides/{id}/` |
 | GET/POST | `/api/v1/admin/competency/agenda-cards/` |
 | GET/PUT/PATCH/DELETE | `/api/v1/admin/competency/agenda-cards/{id}/` |
 
 Filter/search:
 
 - `programs`: `is_published`, `search`, `ordering`
+- `winner-slides`: `display_order`, `search`, `ordering`
 - `agenda-cards`: `is_active`, `urgency_tag`, `recommendation_tag`, `category_tag`, `scope_tag`, `pricing_tag`, `search`, `ordering`
 
 Business rules:
 
 - agenda cards maksimal 15
+- winner slide maksimal 5 slot tetap, admin hanya update `image` dan `alt_text`
 - `category_tag`: `workshop` atau `lomba`
 - `scope_tag`: `nasional` atau `internasional`
 - `pricing_tag`: `berbayar` atau `tidak berbayar`

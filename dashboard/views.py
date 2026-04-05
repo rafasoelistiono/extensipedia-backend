@@ -16,6 +16,11 @@ from aspirations.models import AspirationSubmission
 from aspirations.services import set_featured_state, update_aspiration_submission
 from career.models import CareerResourceConfiguration
 from competency.models import AgendaCard, CompetencyWinnerSlide
+from competency.services import (
+    build_winner_slide_slots as build_fixed_winner_slide_slots,
+    get_default_winner_slide_alt_text,
+    get_winner_slide_slot_instance,
+)
 from dashboard.forms import (
     AgendaCardForm,
     AspirationUpdateForm,
@@ -68,35 +73,8 @@ def build_repository_slots(section):
         }
         for index in range(RepositoryMaterial.MAX_ITEMS_PER_SECTION)
     ]
-
-
-def get_default_winner_slide_alt_text(slot_number):
-    return f"Winner slide slot {slot_number}"
-
-
-def build_winner_slide_instance(slot_number):
-    instance = CompetencyWinnerSlide.objects.filter(display_order=slot_number).first()
-    if instance:
-        return instance
-    return CompetencyWinnerSlide(
-        display_order=slot_number,
-        alt_text=get_default_winner_slide_alt_text(slot_number),
-    )
-
-
 def build_winner_slide_slots():
-    items = list(CompetencyWinnerSlide.objects.order_by("display_order", "-updated_at"))
-    item_map = {item.display_order: item for item in items}
-    return [
-        {
-            "number": index,
-            "item": item_map.get(index) or CompetencyWinnerSlide(
-                display_order=index,
-                alt_text=get_default_winner_slide_alt_text(index),
-            ),
-        }
-        for index in range(1, CompetencyWinnerSlide.MAX_RECORDS + 1)
-    ]
+    return build_fixed_winner_slide_slots()
 
 
 class AdminRootRedirectView(View):
@@ -638,7 +616,7 @@ class CompetencyWinnerSlideUpdateView(DashboardPageMixin, FormView):
 
     def get_winner_slide(self):
         if not hasattr(self, "_winner_slide"):
-            self._winner_slide = build_winner_slide_instance(self.get_slot_number())
+            self._winner_slide = get_winner_slide_slot_instance(self.get_slot_number())
         return self._winner_slide
 
     def get_form_kwargs(self):
