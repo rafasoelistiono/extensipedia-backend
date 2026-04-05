@@ -1,4 +1,7 @@
-from competency.models import AgendaCard, CompetencyProgram
+from django.db.models import Q
+from django.utils import timezone
+
+from competency.models import AgendaCard, CompetencyProgram, CompetencyWinnerSlide
 
 
 BOOLEAN_QUERY_VALUES = {
@@ -52,3 +55,18 @@ def get_public_agenda_cards(filters=None):
 
 def get_admin_agenda_cards():
     return AgendaCard.objects.select_related("created_by", "updated_by").all()
+
+
+def get_public_winner_slides():
+    now = timezone.now()
+    return (
+        CompetencyWinnerSlide.objects.filter(is_active=True)
+        .filter(Q(publish_start_at__isnull=True) | Q(publish_start_at__lte=now))
+        .filter(Q(publish_end_at__isnull=True) | Q(publish_end_at__gte=now))
+        .select_related("created_by", "updated_by")
+        .order_by("display_order", "-updated_at")
+    )
+
+
+def get_admin_winner_slides():
+    return CompetencyWinnerSlide.objects.select_related("created_by", "updated_by").order_by("display_order", "-updated_at")

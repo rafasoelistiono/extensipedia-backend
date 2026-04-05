@@ -15,12 +15,13 @@ from analytics_dashboard.services import build_dashboard_summary, build_recent_t
 from aspirations.models import AspirationSubmission
 from aspirations.services import set_featured_state, update_aspiration_submission
 from career.models import CareerResourceConfiguration
-from competency.models import AgendaCard
+from competency.models import AgendaCard, CompetencyWinnerSlide
 from dashboard.forms import (
     AgendaCardForm,
     AspirationUpdateForm,
     CabinetCalendarForm,
     CareerResourceConfigurationForm,
+    CompetencyWinnerSlideForm,
     CountdownEventForm,
     DashboardLoginForm,
     DashboardProfileForm,
@@ -66,6 +67,18 @@ def build_repository_slots(section):
             "item": items[index] if index < len(items) else None,
         }
         for index in range(RepositoryMaterial.MAX_ITEMS_PER_SECTION)
+    ]
+
+
+def build_winner_slide_slots():
+    items = list(CompetencyWinnerSlide.objects.order_by("display_order", "-updated_at"))
+    item_map = {item.display_order: item for item in items}
+    return [
+        {
+            "number": index,
+            "item": item_map.get(index),
+        }
+        for index in range(1, CompetencyWinnerSlide.MAX_RECORDS + 1)
     ]
 
 
@@ -532,6 +545,12 @@ class CompetencyPageView(DashboardPageMixin, ListView):
     def get_breadcrumbs(self):
         return [("Kompetensi & Karir", None), ("Kompetensi", None)]
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["winner_slide_slots"] = build_winner_slide_slots()
+        context["winner_slide_max_slots"] = CompetencyWinnerSlide.MAX_RECORDS
+        return context
+
 
 class AgendaCardCreateView(DashboardObjectFormMixin, CreateView):
     model = AgendaCard
@@ -577,6 +596,59 @@ class AgendaCardDeleteView(DashboardDeleteView):
 
     def get_breadcrumbs(self):
         return [("Kompetensi & Karir", None), ("Kompetensi", reverse("dashboard:competency")), ("Hapus Agenda", None)]
+
+
+class CompetencyWinnerSlideCreateView(DashboardObjectFormMixin, CreateView):
+    model = CompetencyWinnerSlide
+    form_class = CompetencyWinnerSlideForm
+    template_name = "dashboard/winner_slide_form.html"
+    page_title = "Tambah Winner Slide"
+    page_description = "Isi salah satu slot slider pemenang untuk section kompetensi."
+    sidebar_section = "competency-career"
+    sidebar_subsection = "competency"
+    cancel_url = reverse_lazy("dashboard:competency")
+    success_url = reverse_lazy("dashboard:competency")
+    success_message = "Winner slide berhasil ditambahkan."
+
+    def get_initial(self):
+        initial = super().get_initial()
+        slot = self.request.GET.get("slot")
+        if slot and str(slot).isdigit():
+            initial["display_order"] = int(slot)
+        return initial
+
+    def get_breadcrumbs(self):
+        return [("Kompetensi & Karir", None), ("Kompetensi", reverse("dashboard:competency")), ("Tambah Winner Slide", None)]
+
+
+class CompetencyWinnerSlideUpdateView(DashboardObjectFormMixin, UpdateView):
+    model = CompetencyWinnerSlide
+    form_class = CompetencyWinnerSlideForm
+    template_name = "dashboard/winner_slide_form.html"
+    page_title = "Edit Winner Slide"
+    page_description = "Perbarui gambar slider pemenang untuk section kompetensi."
+    sidebar_section = "competency-career"
+    sidebar_subsection = "competency"
+    cancel_url = reverse_lazy("dashboard:competency")
+    success_url = reverse_lazy("dashboard:competency")
+    success_message = "Winner slide berhasil diperbarui."
+
+    def get_breadcrumbs(self):
+        return [("Kompetensi & Karir", None), ("Kompetensi", reverse("dashboard:competency")), ("Edit Winner Slide", None)]
+
+
+class CompetencyWinnerSlideDeleteView(DashboardDeleteView):
+    model = CompetencyWinnerSlide
+    page_title = "Hapus Winner Slide"
+    page_description = "Winner slide akan dihapus permanen dari slot kompetensi."
+    sidebar_section = "competency-career"
+    sidebar_subsection = "competency"
+    cancel_url = reverse_lazy("dashboard:competency")
+    success_url = reverse_lazy("dashboard:competency")
+    success_message = "Winner slide berhasil dihapus."
+
+    def get_breadcrumbs(self):
+        return [("Kompetensi & Karir", None), ("Kompetensi", reverse("dashboard:competency")), ("Hapus Winner Slide", None)]
 
 
 class CareerSettingsView(DashboardPageMixin, TemplateView):

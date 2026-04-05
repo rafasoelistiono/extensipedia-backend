@@ -1,3 +1,4 @@
+import base64
 from datetime import timedelta
 
 from django import forms
@@ -5,12 +6,13 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from dashboard.forms import AgendaCardForm
 
-from competency.models import AgendaCard
+from competency.models import AgendaCard, CompetencyWinnerSlide
 
 
 def unwrap_response_data(response):
@@ -34,6 +36,16 @@ def build_short_description(seed):
         f"{seed} memberi ringkasan singkat tentang manfaat kegiatan, target peserta, dokumen penting, "
         f"dan langkah persiapan utama agar pendaftaran lebih terarah serta hasil program bisa dipakai "
         f"untuk penguatan portofolio akademik maupun profesional."
+    )
+
+
+def build_test_image(name="slide.png"):
+    return SimpleUploadedFile(
+        name,
+        base64.b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9p6k9TQAAAAASUVORK5CYII="
+        ),
+        content_type="image/png",
     )
 
 
@@ -102,3 +114,69 @@ class AgendaCardPublicApiTests(APITestCase):
         payload = unwrap_response_data(response)
         self.assertEqual(payload[0]["title"], "Newer Agenda")
         self.assertTrue(all(item["urgency_tag"] is True for item in payload))
+
+
+class CompetencyWinnerSlideModelTests(TestCase):
+    def test_winner_slide_supports_only_five_records(self):
+        base_payload = {
+            "alt_text": "Winner slide alt text",
+            "caption": "Caption singkat",
+            "cta_label": "Lihat",
+            "cta_url": "https://example.com/cta",
+            "is_active": True,
+        }
+        for index in range(1, CompetencyWinnerSlide.MAX_RECORDS + 1):
+            CompetencyWinnerSlide.objects.create(
+                title=f"Slide {index}",
+                image=build_test_image(f"slide-{index}.png"),
+                display_order=index,
+                **base_payload,
+            )
+
+        slide = CompetencyWinnerSlide(
+            title="Slide 6",
+            image=build_test_image("slide-6.png"),
+            display_order=1,
+            **base_payload,
+        )
+
+        with self.assertRaises(ValidationError):
+            slide.full_clean()
+
+
+class CompetencyWinnerSlidePublicApiTests(APITestCase):
+    def test_public_winner_slides_only_return_active_published_items_in_slot_order(self):
+        now = timezone.now()
+        visible = CompetencyWinnerSlide.objects.create(
+            title="Visible slide",
+            image=build_test_image("visible.png"),
+            alt_text="Visible alt",
+            display_order=2,
+            is_active=True,
+            publish_start_at=now - timedelta(days=1),
+            publish_end_at=now + timedelta(days=1),
+        )
+        CompetencyWinnerSlide.objects.create(
+            title="Inactive slide",
+            image=build_test_image("inactive.png"),
+            alt_text="Inactive alt",
+            display_order=1,
+            is_active=False,
+        )
+        CompetencyWinnerSlide.objects.create(
+            title="Future slide",
+            image=build_test_image("future.png"),
+            alt_text="Future alt",
+            display_order=3,
+            is_active=True,
+            publish_start_at=now + timedelta(days=1),
+        )
+
+        response = self.client.get(reverse("public-competency:public-competency-winner-slides-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        payload = unwrap_response_data(response)
+        self.assertEqual(len(payload), 1)
+        self.assertEqual(payload[0]["id"], str(visible.id))
+        self.assertEqual(payload[0]["display_order"], 2)
+        self.assertTrue(payload[0]["image_url"].endswith(".png"))

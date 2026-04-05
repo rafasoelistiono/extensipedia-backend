@@ -3,7 +3,7 @@ from django.core.validators import MaxLengthValidator
 from django.db import models
 
 from core.models import BaseModel, SlugModelMixin, image_upload_to
-from core.validators import validate_file_size
+from core.validators import validate_file_size, validate_image_extension
 
 
 class CompetencyProgram(SlugModelMixin, BaseModel):
@@ -67,6 +67,56 @@ class AgendaCard(BaseModel):
             raise ValidationError(
                 {"non_field_errors": [f"Competency agenda cards support a maximum of {self.MAX_RECORDS} records."]}
             )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
+class CompetencyWinnerSlide(BaseModel):
+    MAX_RECORDS = 5
+    SLOT_CHOICES = tuple((index, f"Slot {index}") for index in range(1, MAX_RECORDS + 1))
+
+    title = models.CharField(max_length=255)
+    image = models.ImageField(
+        upload_to=image_upload_to("competency/winner-slides"),
+        validators=[validate_file_size, validate_image_extension],
+    )
+    mobile_image = models.ImageField(
+        upload_to=image_upload_to("competency/winner-slides/mobile"),
+        blank=True,
+        null=True,
+        validators=[validate_file_size, validate_image_extension],
+    )
+    alt_text = models.CharField(max_length=255)
+    caption = models.CharField(max_length=255, blank=True)
+    cta_label = models.CharField(max_length=100, blank=True)
+    cta_url = models.URLField(blank=True)
+    display_order = models.PositiveSmallIntegerField(choices=SLOT_CHOICES, unique=True)
+    is_active = models.BooleanField(default=True)
+    publish_start_at = models.DateTimeField(blank=True, null=True)
+    publish_end_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        ordering = ["display_order", "-updated_at"]
+
+    def __str__(self):
+        return f"Slot {self.display_order} - {self.title}"
+
+    def clean(self):
+        errors = {}
+        queryset = self.__class__.objects.all()
+        if self.pk:
+            queryset = queryset.exclude(pk=self.pk)
+
+        if queryset.count() >= self.MAX_RECORDS:
+            errors["display_order"] = f"Winner slides support a maximum of {self.MAX_RECORDS} records."
+
+        if self.publish_start_at and self.publish_end_at and self.publish_end_at < self.publish_start_at:
+            errors["publish_end_at"] = "Publish end time must be greater than or equal to publish start time."
+
+        if errors:
+            raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
         self.full_clean()

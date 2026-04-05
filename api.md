@@ -17,6 +17,12 @@ Local development:
 http://127.0.0.1:8000
 ```
 
+Global development:
+
+```txt
+http://203.194.113.185/
+```
+
 Prefix semua endpoint API:
 
 ```txt

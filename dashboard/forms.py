@@ -6,7 +6,7 @@ from about.models import CabinetCalendar
 from academic.models import CountdownEvent, QuickDownloadItem, RepositoryMaterial, YouTubeSection
 from aspirations.models import AspirationSubmission
 from career.models import CareerResourceConfiguration
-from competency.models import AgendaCard
+from competency.models import AgendaCard, CompetencyWinnerSlide
 
 
 def coerce_boolean_choice(value):
@@ -203,6 +203,47 @@ class AgendaCardForm(DashboardModelForm):
         self.fields["short_description"].help_text = "Maksimal 300 karakter."
         self.fields["urgency_tag"].help_text = "Gunakan nilai boolean true atau false."
         self.fields["recommendation_tag"].help_text = "Gunakan nilai boolean true atau false."
+
+
+class CompetencyWinnerSlideForm(DashboardModelForm):
+    class Meta:
+        model = CompetencyWinnerSlide
+        fields = (
+            "title",
+            "display_order",
+            "image",
+            "mobile_image",
+            "alt_text",
+            "caption",
+            "cta_label",
+            "cta_url",
+            "publish_start_at",
+            "publish_end_at",
+            "is_active",
+        )
+        widgets = {
+            "publish_start_at": forms.DateTimeInput(
+                format="%Y-%m-%dT%H:%M",
+                attrs={"type": "datetime-local"},
+            ),
+            "publish_end_at": forms.DateTimeInput(
+                format="%Y-%m-%dT%H:%M",
+                attrs={"type": "datetime-local"},
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["publish_start_at"].input_formats = ("%Y-%m-%dT%H:%M",)
+        self.fields["publish_end_at"].input_formats = ("%Y-%m-%dT%H:%M",)
+        self.fields["title"].help_text = "Nama internal slide untuk admin."
+        self.fields["display_order"].help_text = "Pilih slot 1 sampai 5. Setiap slot hanya bisa dipakai satu slide."
+        self.fields["image"].help_text = "Upload gambar utama slider. Format: jpg, jpeg, png, webp. Maksimal 5 MB."
+        self.fields["mobile_image"].help_text = "Opsional. Upload versi mobile jika diperlukan."
+        self.fields["alt_text"].help_text = "Wajib diisi untuk aksesibilitas frontend."
+        self.fields["caption"].help_text = "Opsional. Caption singkat yang bisa ditampilkan di frontend."
+        self.fields["cta_label"].help_text = "Opsional. Label tombol CTA."
+        self.fields["cta_url"].help_text = "Opsional. URL tujuan CTA."
 
 
 class CareerResourceConfigurationForm(DashboardModelForm):

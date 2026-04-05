@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 
 MAX_FILE_SIZE = 5 * 1024 * 1024
 ALLOWED_DOCUMENT_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".pdf"}
+ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 ALLOWED_EMBED_HOSTS = {
     "www.youtube.com",
     "youtube.com",
@@ -79,4 +80,11 @@ def validate_image_or_pdf_extension(file_obj):
     extension = os.path.splitext(file_obj.name)[1].lower()
     if extension not in ALLOWED_DOCUMENT_EXTENSIONS:
         raise ValidationError("Only image files (.jpg, .jpeg, .png, .webp) or .pdf are allowed.")
+    return file_obj
+
+
+def validate_image_extension(file_obj):
+    extension = os.path.splitext(file_obj.name)[1].lower()
+    if extension not in ALLOWED_IMAGE_EXTENSIONS:
+        raise ValidationError("Only image files (.jpg, .jpeg, .png, .webp) are allowed.")
     return file_obj
