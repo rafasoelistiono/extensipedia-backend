@@ -33,7 +33,7 @@
                         {% endif %}
 
                         <div class="d-flex gap-2 mt-3">
-                            <a href="{% url 'dashboard:winner-slide-update' slot.item.pk %}" class="btn btn-sm btn-dark">
+                            <a href="{% url 'dashboard:winner-slide-update' slot.number %}" class="btn btn-sm btn-dark">
                                 {% if slot.item.image %}Ganti Gambar{% else %}Upload Gambar{% endif %}
                             </a>
                         </div>

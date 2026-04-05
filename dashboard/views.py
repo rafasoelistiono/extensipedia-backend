@@ -70,15 +70,30 @@ def build_repository_slots(section):
     ]
 
 
+def get_default_winner_slide_alt_text(slot_number):
+    return f"Winner slide slot {slot_number}"
+
+
+def build_winner_slide_instance(slot_number):
+    instance = CompetencyWinnerSlide.objects.filter(display_order=slot_number).first()
+    if instance:
+        return instance
+    return CompetencyWinnerSlide(
+        display_order=slot_number,
+        alt_text=get_default_winner_slide_alt_text(slot_number),
+    )
+
+
 def build_winner_slide_slots():
-    for index in range(1, CompetencyWinnerSlide.MAX_RECORDS + 1):
-        CompetencyWinnerSlide.objects.get_or_create(display_order=index)
     items = list(CompetencyWinnerSlide.objects.order_by("display_order", "-updated_at"))
     item_map = {item.display_order: item for item in items}
     return [
         {
             "number": index,
-            "item": item_map.get(index),
+            "item": item_map.get(index) or CompetencyWinnerSlide(
+                display_order=index,
+                alt_text=get_default_winner_slide_alt_text(index),
+            ),
         }
         for index in range(1, CompetencyWinnerSlide.MAX_RECORDS + 1)
     ]
@@ -599,8 +614,7 @@ class AgendaCardDeleteView(DashboardDeleteView):
         return [("Kompetensi & Karir", None), ("Kompetensi", reverse("dashboard:competency")), ("Hapus Agenda", None)]
 
 
-class CompetencyWinnerSlideUpdateView(DashboardObjectFormMixin, UpdateView):
-    model = CompetencyWinnerSlide
+class CompetencyWinnerSlideUpdateView(DashboardPageMixin, FormView):
     form_class = CompetencyWinnerSlideForm
     template_name = "dashboard/winner_slide_form.html"
     page_title = "Update Winner Slide"
@@ -611,8 +625,43 @@ class CompetencyWinnerSlideUpdateView(DashboardObjectFormMixin, UpdateView):
     success_url = reverse_lazy("dashboard:competency")
     success_message = "Gambar winner slide berhasil diperbarui."
 
+    def get_slot_number(self):
+        slot = self.kwargs.get("slot")
+        if slot is not None:
+            if slot < 1 or slot > CompetencyWinnerSlide.MAX_RECORDS:
+                raise Http404("Slot winner slide tidak ditemukan.")
+            return slot
+
+        winner_slide = get_object_or_404(CompetencyWinnerSlide, pk=self.kwargs["pk"])
+        return winner_slide.display_order
+
+    def get_winner_slide(self):
+        if not hasattr(self, "_winner_slide"):
+            self._winner_slide = build_winner_slide_instance(self.get_slot_number())
+        return self._winner_slide
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["instance"] = self.get_winner_slide()
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["winner_slide"] = self.get_winner_slide()
+        return context
+
     def get_breadcrumbs(self):
         return [("Kompetensi & Karir", None), ("Kompetensi", reverse("dashboard:competency")), ("Update Winner Slide", None)]
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.display_order = self.get_slot_number()
+        if not self.object.alt_text:
+            self.object.alt_text = get_default_winner_slide_alt_text(self.object.display_order)
+        apply_audit_fields(self.object, self.request.user)
+        self.object.save()
+        messages.success(self.request, self.success_message)
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class CareerSettingsView(DashboardPageMixin, TemplateView):

@@ -69,9 +69,14 @@ urlpatterns = [
     path("akademik/countdown/<uuid:pk>/hapus/", CountdownEventDeleteView.as_view(), name="countdown-delete"),
     path("kompetensi-karir/kompetensi/", CompetencyPageView.as_view(), name="competency"),
     path(
-        "kompetensi-karir/kompetensi/winner-slides/<uuid:pk>/edit/",
+        "kompetensi-karir/kompetensi/winner-slides/slot/<int:slot>/edit/",
         CompetencyWinnerSlideUpdateView.as_view(),
         name="winner-slide-update",
+    ),
+    path(
+        "kompetensi-karir/kompetensi/winner-slides/<uuid:pk>/edit/",
+        CompetencyWinnerSlideUpdateView.as_view(),
+        name="winner-slide-update-by-pk",
     ),
     path("kompetensi-karir/kompetensi/tambah/", AgendaCardCreateView.as_view(), name="agenda-card-create"),
     path("kompetensi-karir/kompetensi/<uuid:pk>/edit/", AgendaCardUpdateView.as_view(), name="agenda-card-update"),
