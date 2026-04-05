@@ -117,60 +117,20 @@ class AgendaCardPublicApiTests(APITestCase):
 
 
 class CompetencyWinnerSlideModelTests(TestCase):
-    def test_winner_slide_supports_only_five_records(self):
-        base_payload = {
-            "alt_text": "Winner slide alt text",
-            "caption": "Caption singkat",
-            "cta_label": "Lihat",
-            "cta_url": "https://example.com/cta",
-            "is_active": True,
-        }
-        for index in range(1, CompetencyWinnerSlide.MAX_RECORDS + 1):
-            CompetencyWinnerSlide.objects.create(
-                title=f"Slide {index}",
-                image=build_test_image(f"slide-{index}.png"),
-                display_order=index,
-                **base_payload,
-            )
-
-        slide = CompetencyWinnerSlide(
-            title="Slide 6",
-            image=build_test_image("slide-6.png"),
-            display_order=1,
-            **base_payload,
+    def test_winner_slide_slots_are_seeded_to_five_records(self):
+        self.assertEqual(CompetencyWinnerSlide.objects.count(), CompetencyWinnerSlide.MAX_RECORDS)
+        self.assertEqual(
+            list(CompetencyWinnerSlide.objects.order_by("display_order").values_list("display_order", flat=True)),
+            [1, 2, 3, 4, 5],
         )
-
-        with self.assertRaises(ValidationError):
-            slide.full_clean()
 
 
 class CompetencyWinnerSlidePublicApiTests(APITestCase):
-    def test_public_winner_slides_only_return_active_published_items_in_slot_order(self):
-        now = timezone.now()
-        visible = CompetencyWinnerSlide.objects.create(
-            title="Visible slide",
-            image=build_test_image("visible.png"),
-            alt_text="Visible alt",
-            display_order=2,
-            is_active=True,
-            publish_start_at=now - timedelta(days=1),
-            publish_end_at=now + timedelta(days=1),
-        )
-        CompetencyWinnerSlide.objects.create(
-            title="Inactive slide",
-            image=build_test_image("inactive.png"),
-            alt_text="Inactive alt",
-            display_order=1,
-            is_active=False,
-        )
-        CompetencyWinnerSlide.objects.create(
-            title="Future slide",
-            image=build_test_image("future.png"),
-            alt_text="Future alt",
-            display_order=3,
-            is_active=True,
-            publish_start_at=now + timedelta(days=1),
-        )
+    def test_public_winner_slides_only_return_filled_slots_in_slot_order(self):
+        visible = CompetencyWinnerSlide.objects.get(display_order=2)
+        visible.image = build_test_image("visible.png")
+        visible.alt_text = "Visible alt"
+        visible.save()
 
         response = self.client.get(reverse("public-competency:public-competency-winner-slides-list"))
 

@@ -16,17 +16,9 @@
         <div class="row g-4">
             <div class="col-lg-8">
                 <div class="row g-3">
-                    <div class="col-md-8">
-                        <label class="form-label" for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
-                        {{ form.title }}
-                        {% if form.title.help_text %}<div class="form-text">{{ form.title.help_text }}</div>{% endif %}
-                        {% for error in form.title.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label" for="{{ form.display_order.id_for_label }}">{{ form.display_order.label }}</label>
-                        {{ form.display_order }}
-                        {% if form.display_order.help_text %}<div class="form-text">{{ form.display_order.help_text }}</div>{% endif %}
-                        {% for error in form.display_order.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    <div class="col-12">
+                        <label class="form-label">Slot</label>
+                        <input class="form-control" type="text" value="Winner Slide {{ form.instance.display_order }}" disabled />
                     </div>
 
                     <div class="col-12">
@@ -36,56 +28,11 @@
                         {% for error in form.alt_text.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
 
-                    <div class="col-12">
-                        <label class="form-label" for="{{ form.caption.id_for_label }}">{{ form.caption.label }}</label>
-                        {{ form.caption }}
-                        {% if form.caption.help_text %}<div class="form-text">{{ form.caption.help_text }}</div>{% endif %}
-                        {% for error in form.caption.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
-
                     <div class="col-md-6">
                         <label class="form-label" for="{{ form.image.id_for_label }}">{{ form.image.label }}</label>
                         {{ form.image }}
                         {% if form.image.help_text %}<div class="form-text">{{ form.image.help_text }}</div>{% endif %}
                         {% for error in form.image.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label" for="{{ form.mobile_image.id_for_label }}">{{ form.mobile_image.label }}</label>
-                        {{ form.mobile_image }}
-                        {% if form.mobile_image.help_text %}<div class="form-text">{{ form.mobile_image.help_text }}</div>{% endif %}
-                        {% for error in form.mobile_image.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label" for="{{ form.cta_label.id_for_label }}">{{ form.cta_label.label }}</label>
-                        {{ form.cta_label }}
-                        {% if form.cta_label.help_text %}<div class="form-text">{{ form.cta_label.help_text }}</div>{% endif %}
-                        {% for error in form.cta_label.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label" for="{{ form.cta_url.id_for_label }}">{{ form.cta_url.label }}</label>
-                        {{ form.cta_url }}
-                        {% if form.cta_url.help_text %}<div class="form-text">{{ form.cta_url.help_text }}</div>{% endif %}
-                        {% for error in form.cta_url.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label" for="{{ form.publish_start_at.id_for_label }}">{{ form.publish_start_at.label }}</label>
-                        {{ form.publish_start_at }}
-                        {% for error in form.publish_start_at.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label" for="{{ form.publish_end_at.id_for_label }}">{{ form.publish_end_at.label }}</label>
-                        {{ form.publish_end_at }}
-                        {% for error in form.publish_end_at.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
-
-                    <div class="col-12">
-                        <div class="form-check form-switch">
-                            {{ form.is_active }}
-                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
-                        </div>
-                        {% for error in form.is_active.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
                 </div>
             </div>
@@ -97,11 +44,6 @@
                         <img src="{{ form.instance.image.url }}" alt="{{ form.instance.alt_text }}" class="img-fluid rounded border mb-3">
                     {% else %}
                         <div class="border rounded p-4 text-center text-muted small bg-white">Belum ada gambar utama.</div>
-                    {% endif %}
-
-                    {% if form.instance.pk and form.instance.mobile_image %}
-                        <div class="small text-muted mb-2">Preview mobile</div>
-                        <img src="{{ form.instance.mobile_image.url }}" alt="{{ form.instance.alt_text }}" class="img-fluid rounded border">
                     {% endif %}
                 </div>
             </div>

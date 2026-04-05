@@ -15,8 +15,6 @@ from dashboard.views import (
     CabinetCalendarUpdateView,
     CareerSettingsView,
     CompetencyPageView,
-    CompetencyWinnerSlideCreateView,
-    CompetencyWinnerSlideDeleteView,
     CompetencyWinnerSlideUpdateView,
     CountdownEventCreateView,
     CountdownEventDeleteView,
@@ -71,19 +69,9 @@ urlpatterns = [
     path("akademik/countdown/<uuid:pk>/hapus/", CountdownEventDeleteView.as_view(), name="countdown-delete"),
     path("kompetensi-karir/kompetensi/", CompetencyPageView.as_view(), name="competency"),
     path(
-        "kompetensi-karir/kompetensi/winner-slides/tambah/",
-        CompetencyWinnerSlideCreateView.as_view(),
-        name="winner-slide-create",
-    ),
-    path(
         "kompetensi-karir/kompetensi/winner-slides/<uuid:pk>/edit/",
         CompetencyWinnerSlideUpdateView.as_view(),
         name="winner-slide-update",
-    ),
-    path(
-        "kompetensi-karir/kompetensi/winner-slides/<uuid:pk>/hapus/",
-        CompetencyWinnerSlideDeleteView.as_view(),
-        name="winner-slide-delete",
     ),
     path("kompetensi-karir/kompetensi/tambah/", AgendaCardCreateView.as_view(), name="agenda-card-create"),
     path("kompetensi-karir/kompetensi/<uuid:pk>/edit/", AgendaCardUpdateView.as_view(), name="agenda-card-update"),

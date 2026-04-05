@@ -1,6 +1,3 @@
-from django.db.models import Q
-from django.utils import timezone
-
 from competency.models import AgendaCard, CompetencyProgram, CompetencyWinnerSlide
 
 
@@ -58,11 +55,9 @@ def get_admin_agenda_cards():
 
 
 def get_public_winner_slides():
-    now = timezone.now()
     return (
-        CompetencyWinnerSlide.objects.filter(is_active=True)
-        .filter(Q(publish_start_at__isnull=True) | Q(publish_start_at__lte=now))
-        .filter(Q(publish_end_at__isnull=True) | Q(publish_end_at__gte=now))
+        CompetencyWinnerSlide.objects.exclude(image="")
+        .filter(image__isnull=False)
         .select_related("created_by", "updated_by")
         .order_by("display_order", "-updated_at")
     )

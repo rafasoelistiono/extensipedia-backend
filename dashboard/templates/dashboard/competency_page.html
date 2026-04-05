@@ -6,9 +6,8 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h2 class="h6 mb-1">Winner Slider</h2>
-                <p class="text-muted small mb-0">Tersedia 5 slot tetap untuk gambar slider pemenang di frontend.</p>
+                <p class="text-muted small mb-0">Tersedia 5 slot tetap. Admin hanya perlu upload atau ganti gambar tiap slot.</p>
             </div>
-            <a href="{% url 'dashboard:winner-slide-create' %}" class="btn btn-outline-dark btn-sm">Tambah Winner Slide</a>
         </div>
         <div class="row g-3 mb-4">
             {% for slot in winner_slide_slots %}
@@ -17,24 +16,15 @@
                         <div class="d-flex justify-content-between align-items-start gap-3">
                             <div>
                                 <div class="small text-muted">Slot {{ slot.number }}</div>
-                                {% if slot.item %}
-                                    <div class="fw-semibold">{{ slot.item.title }}</div>
-                                    <div class="small text-muted">{{ slot.item.alt_text }}</div>
-                                {% else %}
-                                    <div class="fw-semibold">Belum terisi</div>
-                                    <div class="small text-muted">Gunakan slot ini untuk upload gambar slider.</div>
-                                {% endif %}
+                                <div class="fw-semibold">Winner Slide {{ slot.number }}</div>
+                                <div class="small text-muted">{{ slot.item.alt_text|default:"Alt text akan dibuat otomatis." }}</div>
                             </div>
-                            {% if slot.item %}
-                                <span class="badge {% if slot.item.is_active %}text-bg-success{% else %}text-bg-secondary{% endif %}">
-                                    {{ slot.item.is_active|yesno:"Active,Inactive" }}
-                                </span>
-                            {% else %}
-                                <span class="badge text-bg-secondary">Empty</span>
-                            {% endif %}
+                            <span class="badge {% if slot.item.image %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                                {% if slot.item.image %}Ready{% else %}Empty{% endif %}
+                            </span>
                         </div>
 
-                        {% if slot.item and slot.item.image %}
+                        {% if slot.item.image %}
                             <img src="{{ slot.item.image.url }}" alt="{{ slot.item.alt_text }}" class="img-fluid rounded mt-3 border" style="max-height: 180px; object-fit: cover; width: 100%;">
                         {% else %}
                             <div class="border rounded mt-3 d-flex align-items-center justify-content-center text-muted small" style="height: 180px; background:#fff;">
@@ -42,27 +32,11 @@
                             </div>
                         {% endif %}
 
-                        {% if slot.item %}
-                            <div class="small text-muted mt-2">
-                                {% if slot.item.caption %}<div>{{ slot.item.caption }}</div>{% endif %}
-                                {% if slot.item.publish_start_at or slot.item.publish_end_at %}
-                                    <div>
-                                        Publish:
-                                        {{ slot.item.publish_start_at|date:"d M Y H:i"|default:"-" }}
-                                        s/d
-                                        {{ slot.item.publish_end_at|date:"d M Y H:i"|default:"-" }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            <div class="d-flex gap-2 mt-3">
-                                <a href="{% url 'dashboard:winner-slide-update' slot.item.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                                <a href="{% url 'dashboard:winner-slide-delete' slot.item.pk %}" class="btn btn-sm btn-outline-danger">Hapus</a>
-                            </div>
-                        {% else %}
-                            <div class="d-flex gap-2 mt-3">
-                                <a href="{% url 'dashboard:winner-slide-create' %}?slot={{ slot.number }}" class="btn btn-sm btn-dark">Isi Slot</a>
-                            </div>
-                        {% endif %}
+                        <div class="d-flex gap-2 mt-3">
+                            <a href="{% url 'dashboard:winner-slide-update' slot.item.pk %}" class="btn btn-sm btn-dark">
+                                {% if slot.item.image %}Ganti Gambar{% else %}Upload Gambar{% endif %}
+                            </a>
+                        </div>
                     </div>
                 </div>
             {% endfor %}
