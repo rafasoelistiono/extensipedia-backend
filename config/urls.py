@@ -6,7 +6,7 @@ from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 urlpatterns = [
-    path("", TemplateView.as_view(template_name="client-api-checker.html"), name="home"),
+    path("check-api/", TemplateView.as_view(template_name="client-api-checker.html"), name="check-api"),
     path("admin/", include(("dashboard.urls", "dashboard"), namespace="dashboard")),
     path("django-admin/", admin.site.urls),
     path("api/v1/", include("config.api_urls")),
