@@ -306,5 +306,6 @@ Kalau pakai Gmail, gunakan App Password, bukan password Gmail biasa.
 ## Dokumen Yang Perlu Dibaca Setelah README
 
 - [api.md](c:/projek/extensipedia-backend/api.md)
+- [DEPLOY_VPS_FULLSTACK.md](c:/projek/extensipedia-backend/DEPLOY_VPS_FULLSTACK.md)
 - [config/settings/base.py](c:/projek/extensipedia-backend/config/settings/base.py)
 - [dashboard/services.py](c:/projek/extensipedia-backend/dashboard/services.py)

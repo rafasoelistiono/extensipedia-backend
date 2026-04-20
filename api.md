@@ -1,15 +1,47 @@
-# API Guide for Frontend
+# API Guide for Frontend and Deployment Context
 
-Dokumen ini ditujukan untuk tim frontend public site dan admin dashboard. Fokusnya adalah:
+Dokumen ini merangkum API yang aktif di codebase saat ini dan beberapa catatan analisis yang penting untuk frontend, integrasi admin, dan operasional deployment.
 
-- endpoint apa saja yang tersedia saat ini
-- apa yang bisa dilakukan frontend
-- bentuk request/response yang perlu di-handle
-- catatan perilaku backend yang penting untuk implementasi UI
+Dokumen ini disusun dari implementasi aktual pada `config/api_urls.py`, `views.py`, `serializers.py`, `models.py`, dan settings production.
 
-Dokumen ini mengikuti route dan serializer yang aktif di codebase sekarang.
+## 1. Gambaran Aplikasi
 
-## 1. Base URL
+### Stack utama
+
+- Django 6
+- Django REST Framework
+- SimpleJWT untuk auth admin API
+- drf-spectacular untuk OpenAPI schema
+- WhiteNoise untuk static files
+- PostgreSQL sebagai database utama
+- custom admin dashboard template-based di `/admin/`
+
+### Peta URL utama
+
+- Checker API: `/check-api/`
+- Custom admin dashboard: `/admin/`
+- Django admin bawaan: `/django-admin/`
+- API root: `/api/v1/`
+- Swagger UI: `/api/schema/swagger-ui/`
+- ReDoc: `/api/schema/redoc/`
+
+### Pembagian interface
+
+- Public site mengambil data dari `/api/v1/public/...`
+- Admin SPA atau client admin dapat memakai `/api/v1/admin/...`
+- Tim operasional juga bisa memakai dashboard HTML bawaan di `/admin/`
+
+### Temuan analisis penting
+
+- Response API dibungkus konsisten dengan format `success`, `message`, `data`
+- Sebagian besar endpoint list memakai pagination standar DRF yang dibungkus sebagai `data.items` dan `data.pagination`
+- Beberapa endpoint bersifat singleton dan mengembalikan object langsung di `data`
+- Ada resource public yang belum punya admin API khusus, terutama `AboutSection`
+- Dashboard HTML `/admin/` belum mencakup seluruh admin API; beberapa resource hanya tersedia lewat API admin
+- Submit aspiration mengirim email sinkron. Jika SMTP production salah, tiket bisa sudah tersimpan tetapi request tetap gagal ke client
+- Visitor analytics public memakai cache process-local. Pada deployment multi-worker, deduplikasi visitor tidak akan seakurat cache terpusat seperti Redis
+
+## 2. Base URL
 
 Local development:
 
@@ -17,13 +49,13 @@ Local development:
 http://127.0.0.1:8000
 ```
 
-Global development:
+Base URL production mengikuti domain atau IP server Anda, misalnya:
 
 ```txt
-http://203.194.113.185/
+https://api.domainanda.com
 ```
 
-Prefix semua endpoint API:
+Prefix seluruh endpoint API:
 
 ```txt
 /api/v1/
@@ -34,50 +66,30 @@ Pembagian scope:
 - Public API: `/api/v1/public/...`
 - Admin API: `/api/v1/admin/...`
 
-## 2. Ringkasnya: Frontend Bisa Apa Saja?
+API root:
 
-### Public frontend
+```txt
+GET /api/v1/
+```
 
-Public frontend bisa:
+Response API root:
 
-- menampilkan hero section
-- menampilkan section tentang kami
-- menampilkan kalender kabinet dengan `embed_url` dan `embed_code`
-- menampilkan profil organisasi dan daftar leadership
-- menampilkan layanan akademik
-- menampilkan quick downloads
-- menampilkan repository bahan kuliah per section
-- menampilkan section YouTube
-- menampilkan countdown event
-- menampilkan program kompetensi
-- menampilkan agenda card kompetensi dengan filter
-- menampilkan career resources
-- menampilkan career opportunities
-- menampilkan campaign advokasi
-- menampilkan featured aspirations
-- submit aspiration baru
-- upvote dan vote aspiration featured
-- melacak progress aspiration via `ticket_id`
-
-### Admin frontend
-
-Admin frontend bisa:
-
-- login, refresh token, logout
-- mengambil profil admin yang sedang login
-- mengelola user admin
-- mengelola konten About
-- mengelola konten Academic
-- mengelola konten Competency
-- mengelola konten Career
-- mengelola campaign Advocacy
-- melihat ringkasan dashboard dan log tiket
-- melihat dan mengubah aspiration submission
-- mengatur featured / unfeatured aspiration
+```json
+{
+  "success": true,
+  "message": "Extensipedia API v1",
+  "data": {
+    "name": "Extensipedia API",
+    "version": "v1",
+    "public_base_url": "http://127.0.0.1:8000/api/v1/public/",
+    "admin_base_url": "http://127.0.0.1:8000/api/v1/admin/"
+  }
+}
+```
 
 ## 3. Global Response Format
 
-Semua response sukses dibungkus dengan format:
+Semua response sukses memakai bentuk:
 
 ```json
 {
@@ -87,7 +99,17 @@ Semua response sukses dibungkus dengan format:
 }
 ```
 
-Contoh error:
+Semua response error dibungkus menjadi:
+
+```json
+{
+  "success": false,
+  "message": "Request failed",
+  "data": {}
+}
+```
+
+Contoh error tracking ticket:
 
 ```json
 {
@@ -101,7 +123,7 @@ Contoh error:
 
 ## 4. Pagination Format
 
-Endpoint list yang dipaginasi mengembalikan:
+Endpoint list yang dipaginasi mengembalikan bentuk:
 
 ```json
 {
@@ -130,8 +152,9 @@ Query param umum:
 
 Catatan:
 
-- endpoint singleton mengembalikan object langsung di `data`
-- beberapa endpoint custom mengembalikan object atau array langsung di `data`, bukan `data.items`
+- `page_size` maksimum adalah `100`
+- endpoint singleton tidak memakai `data.items`
+- beberapa endpoint custom mengembalikan array langsung di `data`
 
 ## 5. Authentication
 
@@ -142,13 +165,13 @@ Catatan:
 ### Admin API
 
 - menggunakan JWT Bearer token
-- login:
+- endpoint login:
 
 ```txt
 POST /api/v1/admin/accounts/auth/login/
 ```
 
-Request body:
+Request body login:
 
 ```json
 {
@@ -157,7 +180,7 @@ Request body:
 }
 ```
 
-Success response:
+Contoh response login:
 
 ```json
 {
@@ -183,7 +206,7 @@ Success response:
 }
 ```
 
-Header untuk semua endpoint admin:
+Header untuk endpoint admin:
 
 ```txt
 Authorization: Bearer <access_token>
@@ -194,6 +217,11 @@ Refresh token:
 ```txt
 POST /api/v1/admin/accounts/auth/refresh/
 ```
+
+Catatan refresh:
+
+- `ROTATE_REFRESH_TOKENS=True`
+- backend dapat mengembalikan refresh token baru setelah refresh
 
 Logout:
 
@@ -209,18 +237,19 @@ Body logout:
 }
 ```
 
-## 6. Catatan Global Untuk Frontend
+## 6. Global Behavior dan Constraint
 
-- trailing slash yang didokumentasikan di sini adalah bentuk standar yang sebaiknya dipakai frontend
-- file/image bisa berupa absolute URL
-- jika deployment tertentu memberi path relatif, frontend sebaiknya tetap aman dengan prepend base URL
-- endpoint submit aspiration memakai `multipart/form-data`
-- frontend perlu menangani `429 Too Many Requests`
+- Trailing slash adalah format standar yang sebaiknya selalu dipakai client
+- Untuk aspiration submit, backend juga menerima `/submit` tanpa slash, tetapi client tetap sebaiknya memakai `/submit/`
+- Endpoint vote dan upvote juga menerima bentuk tanpa trailing slash
+- File media biasanya dikembalikan sebagai absolute URL jika request berjalan normal melalui DRF serializer context
+- Frontend tetap sebaiknya aman terhadap `null` pada field file/image/embed
+- Public analytics hanya menghitung `GET` dan `HEAD` di bawah `/api/v1/public/`, selain endpoint tracking tiket
 
-Throttle penting:
+Throttle rate penting:
 
 - aspiration submit: `2/hour`, `5/day`
-- aspiration interaction vote/upvote: `10/hour`, `30/day`
+- aspiration interaction: `10/hour`, `30/day`
 - ticket tracking: `60/hour`
 - admin login: `5/min`, `20/hour`
 
@@ -228,347 +257,145 @@ Throttle penting:
 
 ### 7.1 Core
 
-Apa yang bisa dilakukan frontend:
-
-- health check backend
-
 | Method | Endpoint | Kegunaan |
 |---|---|---|
-| GET | `/api/v1/public/core/health/` | Mengecek backend hidup |
+| GET | `/api/v1/public/core/health/` | Health check backend |
+
+Contoh response:
+
+```json
+{
+  "success": true,
+  "message": "Service is healthy",
+  "data": {
+    "status": "ok"
+  }
+}
+```
 
 ### 7.2 About
 
-Apa yang bisa dilakukan frontend:
-
-- render hero homepage
-- render section tentang kami
-- render kalender kabinet
-- render profil organisasi
-- render daftar leadership
-
 | Method | Endpoint | Kegunaan |
 |---|---|---|
-| GET | `/api/v1/public/about/hero/` | Mengambil 1 hero aktif |
-| GET | `/api/v1/public/about/tentang-kami/` | Mengambil 1 about section aktif |
-| GET | `/api/v1/public/about/cabinet-calendar/` | Mengambil 1 kalender kabinet aktif |
-| GET | `/api/v1/public/about/profiles/` | List profil organisasi |
-| GET | `/api/v1/public/about/profiles/{id}/` | Detail profil organisasi |
-| GET | `/api/v1/public/about/leadership/` | List leadership |
+| GET | `/api/v1/public/about/hero/` | Hero aktif |
+| GET | `/api/v1/public/about/tentang-kami/` | About section aktif |
+| GET | `/api/v1/public/about/cabinet-calendar/` | Cabinet calendar aktif |
+| GET | `/api/v1/public/about/profiles/` | List organization profile aktif |
+| GET | `/api/v1/public/about/profiles/{id}/` | Detail organization profile |
+| GET | `/api/v1/public/about/leadership/` | List leadership aktif |
 | GET | `/api/v1/public/about/leadership/{id}/` | Detail leadership |
 
-Contoh response hero:
+Field penting:
 
-```json
-{
-  "success": true,
-  "message": "Active hero section retrieved successfully",
-  "data": {
-    "id": "uuid",
-    "title": "Kabinet Harmoni 2026",
-    "subtitle": "Bergerak bersama",
-    "description": "Portal resmi kabinet",
-    "image": "http://127.0.0.1:8000/media/about/hero/example.jpg",
-    "primary_button_label": "Lihat Program",
-    "primary_button_url": "https://example.com/program",
-    "secondary_button_label": "Kirim Aspirasi",
-    "secondary_button_url": "https://example.com/aspirasi"
-  }
-}
-```
+- `hero`: `title`, `subtitle`, `description`, `image`, `primary_button_label`, `primary_button_url`, `secondary_button_label`, `secondary_button_url`
+- `tentang-kami`: `title`, `subtitle`, `description`, `image`
+- `cabinet-calendar`: `title`, `description`, `embed_url`, `embed_code`, `provider`
+- `profiles`: `name`, `tagline`, `summary`, `vision`, `mission`, `logo`, `contact_email`, `contact_phone`, `address`
+- `leadership`: `name`, `role`, `bio`, `photo`, `display_order`
 
-Contoh response tentang kami:
+Catatan:
 
-```json
-{
-  "success": true,
-  "message": "Active about section retrieved successfully",
-  "data": {
-    "id": "uuid",
-    "title": "Tentang Kami",
-    "subtitle": "Kabinet mahasiswa",
-    "description": "Deskripsi singkat organisasi",
-    "image": null
-  }
-}
-```
-
-Contoh response cabinet calendar:
-
-```json
-{
-  "success": true,
-  "message": "Active cabinet calendar retrieved successfully",
-  "data": {
-    "id": "uuid",
-    "title": "Kalender Kabinet",
-    "description": "Agenda kabinet",
-    "embed_url": "https://calendar.google.com/calendar/embed?...",
-    "embed_code": "<iframe src=\"https://calendar.google.com/calendar/embed?...\"></iframe>",
-    "provider": "google_calendar"
-  }
-}
-```
-
-Catatan frontend:
-
-- `cabinet-calendar` adalah singleton, bukan list
-- untuk render iframe, frontend sebaiknya tetap sanitize dengan aman
+- `cabinet-calendar` adalah singleton
+- `embed_url` public adalah hasil sanitasi dari `sanitized_embed_url`
 - `leadership` mendukung `search` dan `ordering`
+- `AboutSection` saat ini ada endpoint public tetapi tidak ada admin API khusus untuk mengubahnya
 
 ### 7.3 Academic
 
-Apa yang bisa dilakukan frontend:
-
-- render layanan akademik
-- render quick downloads
-- render repository bahan kuliah per section
-- render section YouTube
-- render countdown event
-
 | Method | Endpoint | Kegunaan |
 |---|---|---|
-| GET | `/api/v1/public/academic/services/` | List layanan akademik |
+| GET | `/api/v1/public/academic/services/` | List layanan akademik publish |
 | GET | `/api/v1/public/academic/services/{id}/` | Detail layanan akademik |
-| GET | `/api/v1/public/academic/quick-downloads/` | List quick downloads |
+| GET | `/api/v1/public/academic/quick-downloads/` | List quick downloads aktif |
 | GET | `/api/v1/public/academic/quick-downloads/{id}/` | Detail quick download |
-| GET | `/api/v1/public/academic/repository/` | Object grouped repository: `akuntansi` dan `manajemen` |
-| GET | `/api/v1/public/academic/youtube/` | 1 section YouTube aktif |
+| GET | `/api/v1/public/academic/repository/` | Object grouped repository |
+| GET | `/api/v1/public/academic/youtube/` | YouTube section aktif |
 | GET | `/api/v1/public/academic/countdown-events/` | List countdown event aktif |
 | GET | `/api/v1/public/academic/countdown-events/{id}/` | Detail countdown event |
 
-Contoh quick downloads:
+Field penting:
 
-```json
-{
-  "success": true,
-  "message": "Resources retrieved successfully",
-  "data": {
-    "items": [
-      {
-        "id": "uuid",
-        "title": "Panduan KRS",
-        "resource_type": "file",
-        "resource_url": "http://127.0.0.1:8000/media/academic/quick-downloads/file.pdf",
-        "display_order": 1
-      }
-    ],
-    "pagination": {
-      "count": 1,
-      "next": null,
-      "previous": null,
-      "page": 1,
-      "page_size": 10,
-      "total_pages": 1
-    }
-  }
-}
-```
+- `services`: `title`, `slug`, `description`, `thumbnail`, `published_at`
+- `quick-downloads`: `title`, `resource_type`, `resource_url`, `display_order`
+- `repository`: object dengan key `akuntansi` dan `manajemen`
+- `youtube`: `title`, `description`, `embed_url`
+- `countdown-events`: `title`, `target_datetime`, `display_order`
 
-Contoh repository:
+Catatan:
 
-```json
-{
-  "success": true,
-  "message": "Repository materials retrieved successfully",
-  "data": {
-    "akuntansi": [
-      {
-        "id": "uuid",
-        "title": "Akuntansi Dasar",
-        "google_drive_link": "https://drive.google.com/file/d/xxx/view",
-        "display_order": 1
-      }
-    ],
-    "manajemen": [
-      {
-        "id": "uuid",
-        "title": "Pengantar Manajemen",
-        "google_drive_link": "https://drive.google.com/file/d/yyy/view",
-        "display_order": 1
-      }
-    ]
-  }
-}
-```
-
-Contoh YouTube singleton:
-
-```json
-{
-  "success": true,
-  "message": "Active YouTube section retrieved successfully",
-  "data": {
-    "id": "uuid",
-    "title": "YouTube Akademik",
-    "description": "Video pembelajaran dan dokumentasi",
-    "embed_url": "https://www.youtube.com/embed/abc123"
-  }
-}
-```
-
-Catatan frontend:
-
-- `repository` bukan endpoint paginated
-- `quick-downloads` mengembalikan `resource_type` = `file` atau `external_link`
+- `quick-downloads.resource_type` bernilai `file` atau `external_link`
+- `repository` tidak dipaginasi
+- repository hanya mendukung section `akuntansi` dan `manajemen`
 - `countdown-events` mendukung `search` dan `ordering`
 
 ### 7.4 Competency
 
-Apa yang bisa dilakukan frontend:
-
-- render daftar program kompetensi
-- render agenda card
-- memfilter agenda card sesuai tag
-- render winner slide section dari maksimal 5 slot tetap
-
 | Method | Endpoint | Kegunaan |
 |---|---|---|
-| GET | `/api/v1/public/competency/programs/` | List program kompetensi |
+| GET | `/api/v1/public/competency/programs/` | List program kompetensi publish |
 | GET | `/api/v1/public/competency/programs/{id}/` | Detail program kompetensi |
-| GET | `/api/v1/public/competency/winner-slides/` | List winner slide yang sudah terisi gambar |
-| GET | `/api/v1/public/competency/agenda-cards/` | List agenda card |
+| GET | `/api/v1/public/competency/agenda-cards/` | List agenda card aktif |
 | GET | `/api/v1/public/competency/agenda-cards/{id}/` | Detail agenda card |
+| GET | `/api/v1/public/competency/winner-slides/` | List winner slide yang sudah berisi gambar |
+| GET | `/api/v1/public/competency/winner-slides/{id}/` | Detail winner slide |
 
-Query params penting untuk `agenda-cards`:
+Filter penting `agenda-cards`:
 
+- `urgency_tag=true|false|1|0`
+- `recommendation_tag=true|false|1|0`
+- `category_tag=workshop|lomba`
+- `scope_tag=nasional|internasional`
+- `pricing_tag=berbayar|tidak berbayar`
 - `search`
 - `ordering`
-- `urgency_tag=true|false`
-- `recommendation_tag=true|false`
-- `category_tag`
-- `scope_tag`
-- `pricing_tag`
 
-Contoh winner slides:
+Field penting:
 
-```json
-{
-  "success": true,
-  "message": "Winner slides retrieved successfully",
-  "data": {
-    "items": [
-      {
-        "id": "uuid",
-        "image_url": "http://127.0.0.1:8000/media/competency/winner-slides/slide-1.png",
-        "alt_text": "Juara nasional 2026",
-        "display_order": 1,
-        "updated_at": "2026-04-05T21:00:00+07:00"
-      }
-    ],
-    "pagination": {
-      "count": 1,
-      "next": null,
-      "previous": null,
-      "page": 1,
-      "page_size": 10,
-      "total_pages": 1
-    }
-  }
-}
-```
+- `programs`: `title`, `slug`, `description`, `poster`, `starts_at`, `ends_at`
+- `agenda-cards`: `title`, `short_description`, `urgency_tag`, `recommendation_tag`, `category_tag`, `scope_tag`, `pricing_tag`, `deadline_date`, `registration_link`, `google_calendar_link`, `countdown_days`
+- `winner-slides`: `image_url`, `alt_text`, `display_order`, `updated_at`
 
-Catatan frontend winner slides:
+Catatan:
 
-- slot bersifat tetap 1 sampai 5
-- endpoint public hanya mengembalikan slot yang sudah punya gambar
-- gunakan `display_order` untuk urutan render di client
-- gunakan `alt_text` sebagai `alt` image
-
-Default ordering:
-
-```txt
--created_at,-updated_at,deadline_date,title
-```
-
-Contoh item agenda card:
-
-```json
-{
-  "id": "uuid",
-  "title": "Business Case Competition 2026",
-  "short_description": "Short description...",
-  "urgency_tag": true,
-  "recommendation_tag": false,
-  "category_tag": "lomba",
-  "scope_tag": "nasional",
-  "pricing_tag": "tidak berbayar",
-  "deadline_date": "2026-03-25",
-  "registration_link": "https://example.com/register",
-  "google_calendar_link": "https://calendar.google.com/calendar/render?...",
-  "countdown_days": 10
-}
-```
-
-Catatan frontend:
-
-- `urgency_tag` dan `recommendation_tag` bertipe boolean
-- `countdown_days` sudah dihitung backend
+- `countdown_days` dihitung backend dari `deadline_date`
+- public winner slide hanya menampilkan slot yang sudah punya gambar
+- urutan default agenda card adalah `-created_at,-updated_at,deadline_date,title`
 
 ### 7.5 Career
 
-Apa yang bisa dilakukan frontend:
-
-- render career resources singleton
-- render daftar opportunity
-
 | Method | Endpoint | Kegunaan |
 |---|---|---|
-| GET | `/api/v1/public/career/resources/` | Resource links tetap untuk halaman karier |
-| GET | `/api/v1/public/career/opportunities/` | List career opportunity |
-| GET | `/api/v1/public/career/opportunities/{id}/` | Detail career opportunity |
+| GET | `/api/v1/public/career/resources/` | Resource karier aktif |
+| GET | `/api/v1/public/career/opportunities/` | List career opportunity publish |
+| GET | `/api/v1/public/career/opportunities/{id}/` | Detail opportunity |
 
-Contoh response resource:
+Field penting:
 
-```json
-{
-  "success": true,
-  "message": "Career resources retrieved successfully",
-  "data": {
-    "id": "uuid",
-    "cv_templates": "https://example.com/cv-templates",
-    "cover_letter": "https://example.com/cover-letter",
-    "portfolio_guide": "https://example.com/portfolio-guide",
-    "salary_script": "https://example.com/salary-script",
-    "case_study_interview_prep": "https://example.com/case-study-interview-prep"
-  }
-}
-```
+- `resources`: `cv_templates`, `cover_letter`, `portfolio_guide`, `salary_script`, `case_study_interview_prep`
+- `opportunities`: `title`, `organization`, `description`, `apply_url`, `closes_at`
+
+Catatan:
+
+- public resources mengambil record yang aktif
+- model resources bersifat single active configuration
 
 ### 7.6 Advocacy
 
-Apa yang bisa dilakukan frontend:
-
-- render list campaign
-- render detail campaign
-
 | Method | Endpoint | Kegunaan |
 |---|---|---|
-| GET | `/api/v1/public/advocacy/campaigns/` | List campaign |
+| GET | `/api/v1/public/advocacy/campaigns/` | List campaign publish |
 | GET | `/api/v1/public/advocacy/campaigns/{id}/` | Detail campaign |
 
-Contoh item campaign:
+Field penting:
 
-```json
-{
-  "id": "uuid",
-  "title": "Campaign title",
-  "slug": "campaign-title",
-  "summary": "Ringkasan singkat",
-  "content": "Konten lengkap campaign",
-  "banner": "http://127.0.0.1:8000/media/advocacy/banner.jpg",
-  "embed_url": "https://example.com/embed"
-}
-```
+- `title`
+- `slug`
+- `summary`
+- `content`
+- `banner`
+- `embed_url`
 
 ### 7.7 Aspirations
-
-Apa yang bisa dilakukan frontend:
-
-- menampilkan featured aspirations
-- submit aspiration baru dari form public
-- mengirim upvote
-- mengirim vote
-- tracking ticket
 
 | Method | Endpoint | Kegunaan |
 |---|---|---|
@@ -576,25 +403,32 @@ Apa yang bisa dilakukan frontend:
 | GET | `/api/v1/public/aspirations/featured/` | List featured aspirations |
 | POST | `/api/v1/public/aspirations/{id}/upvote/` | Tambah upvote |
 | POST | `/api/v1/public/aspirations/{id}/vote/` | Tambah vote |
-| GET | `/api/v1/public/tickets/track/?ticket_id=...` | Lacak status ticket |
+| GET | `/api/v1/public/tickets/track/?ticket_id=ASP-XXXXXXXXXX` | Tracking ticket |
 
-Query param untuk `featured`:
+Request `submit`:
+
+- content type: `multipart/form-data`
+- required fields:
+  - `full_name`
+  - `npm`
+  - `email`
+  - `title`
+  - `short_description`
+- optional:
+  - `evidence_attachment`
+
+Catatan submit:
+
+- `visibility` tidak bisa dipilih public client
+- record baru akan dibuat dengan `visibility=anonymous`
+- `status` awal adalah `submitted`
+- `ticket_id` otomatis dibuat format `ASP-XXXXXXXXXX`
+- `evidence_attachment` hanya menerima image atau PDF
+
+Query param `featured`:
 
 - `visibility=public`
 - `visibility=anonymous`
-
-Request submit aspiration:
-
-- content type: `multipart/form-data`
-
-Fields:
-
-- `full_name` required
-- `npm` required
-- `email` required
-- `title` required
-- `short_description` required
-- `evidence_attachment` optional
 
 Contoh response submit:
 
@@ -614,30 +448,15 @@ Contoh response submit:
 }
 ```
 
-Contoh featured aspirations:
+Catatan featured:
 
-```json
-{
-  "success": true,
-  "message": "Featured aspirations retrieved successfully",
-  "data": [
-    {
-      "id": "uuid",
-      "ticket_id": "ASP-1A2B3C4D5E",
-      "title": "Perbaikan WiFi Gedung A",
-      "short_description": "WiFi sering putus saat jam kuliah",
-      "visibility": "public",
-      "sender_name": "Rina Putri",
-      "status": "investigating",
-      "upvote_count": 12,
-      "vote_count": 7,
-      "created_at": "2026-03-15T05:30:00Z"
-    }
-  ]
-}
-```
+- hanya menampilkan aspiration yang `is_featured=true`
+- status yang boleh tampil public adalah `investigating` atau `resolved`
+- `sender_name` menjadi `null` jika visibility `anonymous`
+- result tidak dipaginasi
+- maksimum featured public adalah `6`
 
-Contoh response upvote / vote:
+Contoh response interaction:
 
 ```json
 {
@@ -670,41 +489,19 @@ Contoh response tracking kosong:
 }
 ```
 
-Contoh response tracking ditemukan:
+Catatan tracking:
 
-```json
-{
-  "success": true,
-  "message": "Ticket tracking retrieved successfully",
-  "data": {
-    "ticket_id": "ASP-1A2B3C4D5E",
-    "title": "Perbaikan WiFi Gedung A",
-    "status": "investigating",
-    "submitted_at": "2026-03-15T05:30:00Z",
-    "updated_at": "2026-03-16T02:15:00Z",
-    "visibility": "anonymous",
-    "short_description": "WiFi sering putus saat jam kuliah"
-  }
-}
-```
-
-Catatan frontend:
-
-- `sender_name` akan `null` jika `visibility=anonymous`
-- endpoint tracking tidak pernah mengekspos `email` atau `npm`
-- frontend sebaiknya gunakan path dengan trailing slash
+- jika `ticket_id` kosong, backend mengembalikan object kosong yang aman
+- jika format tiket salah atau tiket tidak ditemukan, backend mengembalikan `404`
+- tracking tidak pernah mengekspos `full_name`, `npm`, atau `email`
 
 ### 7.8 Analytics Info
 
-Apa yang bisa dilakukan frontend:
-
-- hanya mengetahui bahwa analytics dashboard tidak tersedia untuk public
-
 | Method | Endpoint | Kegunaan |
 |---|---|---|
-| GET | `/api/v1/public/analytics-dashboard/` | Placeholder informasi |
+| GET | `/api/v1/public/analytics-dashboard/` | Placeholder informasi untuk public |
 
-Contoh response:
+Response:
 
 ```json
 {
@@ -718,93 +515,63 @@ Contoh response:
 
 ## 8. Admin API
 
-Semua endpoint admin membutuhkan bearer token, kecuali login dan refresh.
+Semua endpoint admin membutuhkan Bearer token, kecuali login dan refresh.
 
-## 8.1 Accounts
-
-Apa yang bisa dilakukan frontend admin:
-
-- login
-- refresh token
-- logout
-- mengambil current profile
-- CRUD user admin
+### 8.1 Accounts
 
 | Method | Endpoint | Kegunaan |
 |---|---|---|
 | POST | `/api/v1/admin/accounts/auth/login/` | Login |
-| POST | `/api/v1/admin/accounts/auth/refresh/` | Refresh access token |
+| POST | `/api/v1/admin/accounts/auth/refresh/` | Refresh token |
 | POST | `/api/v1/admin/accounts/auth/logout/` | Logout |
 | GET | `/api/v1/admin/accounts/profile/` | Current admin profile |
-| GET | `/api/v1/admin/accounts/users/` | List user admin |
-| POST | `/api/v1/admin/accounts/users/` | Buat user admin |
-| GET | `/api/v1/admin/accounts/users/{id}/` | Detail user admin |
-| PUT/PATCH | `/api/v1/admin/accounts/users/{id}/` | Update user admin |
-| DELETE | `/api/v1/admin/accounts/users/{id}/` | Hapus user admin |
+| GET/POST | `/api/v1/admin/accounts/users/` | List dan create user admin |
+| GET/PUT/PATCH/DELETE | `/api/v1/admin/accounts/users/{id}/` | Detail dan kelola user admin |
 
 Filter/search users:
 
-- `search`
-- `ordering`
 - `is_active`
 - `is_staff`
 - `is_superuser`
+- `search`
+- `ordering`
 
 Catatan:
 
-- endpoint users hanya untuk superadmin
-- response user membawa field `role`
+- endpoint `users` hanya bisa diakses superadmin
+- field `role` tersedia sebagai `admin` atau `superadmin`
+- saat create/update user, `role` akan menentukan kombinasi `is_staff` dan `is_superuser`
 
-## 8.2 Dashboard
-
-Apa yang bisa dilakukan frontend admin:
-
-- menampilkan summary cards
-- menampilkan chart visitor 30 hari
-- menampilkan log aktivitas tiket terbaru
+### 8.2 Dashboard
 
 | Method | Endpoint | Kegunaan |
 |---|---|---|
-| GET | `/api/v1/admin/dashboard/summary/` | Ringkasan dashboard |
-| GET | `/api/v1/admin/dashboard/ticket-log/` | Log aktivitas tiket |
+| GET | `/api/v1/admin/dashboard/summary/` | Summary cards dan chart visitor |
+| GET | `/api/v1/admin/dashboard/ticket-log/` | 20 log aktivitas tiket terbaru |
 
-Contoh summary:
+Field summary:
 
-```json
-{
-  "success": true,
-  "message": "Dashboard summary retrieved successfully",
-  "data": {
-    "cards": {
-      "total_aspiration_submissions": 128,
-      "status_counts": {
-        "submitted": 41,
-        "investigating": 56,
-        "resolved": 31
-      },
-      "total_featured_aspirations": 6,
-      "total_visitors_last_30_days": 842
-    },
-    "charts": {
-      "daily_visitors_last_30_days": [
-        {
-          "date": "2026-02-15",
-          "count": 21
-        }
-      ]
-    }
-  }
-}
-```
+- `cards.total_aspiration_submissions`
+- `cards.status_counts.submitted`
+- `cards.status_counts.investigating`
+- `cards.status_counts.resolved`
+- `cards.total_featured_aspirations`
+- `cards.total_visitors_last_30_days`
+- `charts.daily_visitors_last_30_days[]`
 
-## 8.3 About
+Field ticket log:
 
-Apa yang bisa dilakukan frontend admin:
+- `ticket_id`
+- `title`
+- `action`
+- `message`
+- `actor_name`
+- `status_snapshot`
+- `visibility_snapshot`
+- `metadata`
+- `created_at`
 
-- CRUD organization profile
-- CRUD leadership
-- CRUD hero
-- get/update cabinet calendar singleton
+### 8.3 About
 
 | Method | Endpoint |
 |---|---|
@@ -826,17 +593,10 @@ Filter/search:
 Catatan:
 
 - `cabinet-calendar` adalah singleton
-- field utamanya: `title`, `description`, `embed_url`, `embed_code`
+- `hero` adalah single-active configuration
+- `AboutSection` belum memiliki admin API tersendiri walaupun endpoint public-nya ada
 
-## 8.4 Academic
-
-Apa yang bisa dilakukan frontend admin:
-
-- CRUD academic services
-- CRUD quick downloads
-- CRUD repository materials
-- CRUD YouTube section
-- CRUD countdown events
+### 8.4 Academic
 
 | Method | Endpoint |
 |---|---|
@@ -861,47 +621,39 @@ Filter/search:
 
 Business rules:
 
-- quick downloads maksimal 5 item
-- repository `akuntansi` maksimal 3 item
-- repository `manajemen` maksimal 3 item
-- quick download harus pilih salah satu: file atau external URL
+- quick downloads maksimum `5` item total
+- setiap repository section maksimum `3` item
+- quick download harus tepat salah satu: upload file atau external URL
+- repository material hanya untuk section `akuntansi` dan `manajemen`
+- YouTube section adalah single-active configuration
 
-## 8.5 Competency
-
-Apa yang bisa dilakukan frontend admin:
-
-- CRUD competency programs
-- CRUD agenda cards
+### 8.5 Competency
 
 | Method | Endpoint |
 |---|---|
 | GET/POST | `/api/v1/admin/competency/programs/` |
 | GET/PUT/PATCH/DELETE | `/api/v1/admin/competency/programs/{id}/` |
-| GET | `/api/v1/admin/competency/winner-slides/` |
-| GET/PATCH | `/api/v1/admin/competency/winner-slides/{id}/` |
 | GET/POST | `/api/v1/admin/competency/agenda-cards/` |
 | GET/PUT/PATCH/DELETE | `/api/v1/admin/competency/agenda-cards/{id}/` |
+| GET | `/api/v1/admin/competency/winner-slides/` |
+| GET/PATCH | `/api/v1/admin/competency/winner-slides/{id}/` |
 
 Filter/search:
 
 - `programs`: `is_published`, `search`, `ordering`
-- `winner-slides`: `display_order`, `search`, `ordering`
 - `agenda-cards`: `is_active`, `urgency_tag`, `recommendation_tag`, `category_tag`, `scope_tag`, `pricing_tag`, `search`, `ordering`
+- `winner-slides`: `display_order`, `search`, `ordering`
 
 Business rules:
 
-- agenda cards maksimal 15
-- winner slide maksimal 5 slot tetap, admin hanya update `image` dan `alt_text`
+- agenda cards maksimum `15`
 - `category_tag`: `workshop` atau `lomba`
 - `scope_tag`: `nasional` atau `internasional`
 - `pricing_tag`: `berbayar` atau `tidak berbayar`
+- winner slide memakai `5` slot tetap
+- admin API winner slide hanya mengizinkan `GET` dan `PATCH`
 
-## 8.6 Career
-
-Apa yang bisa dilakukan frontend admin:
-
-- CRUD opportunities
-- CRUD resource configuration
+### 8.6 Career
 
 | Method | Endpoint |
 |---|---|
@@ -915,11 +667,12 @@ Filter/search:
 - `opportunities`: `is_published`, `search`, `ordering`
 - `resources`: `is_active`, `ordering`
 
-## 8.7 Advocacy
+Catatan:
 
-Apa yang bisa dilakukan frontend admin:
+- `resources` adalah single-active configuration
+- dashboard HTML saat ini fokus mengelola resource links, bukan opportunity list
 
-- CRUD campaign
+### 8.7 Advocacy
 
 | Method | Endpoint |
 |---|---|
@@ -932,67 +685,50 @@ Filter/search:
 - `search`
 - `ordering`
 
-## 8.8 Aspirations
+Catatan:
 
-Apa yang bisa dilakukan frontend admin:
+- custom dashboard HTML belum menyediakan halaman pengelolaan campaign, tetapi admin API tersedia
 
-- melihat list submission
-- melihat detail submission
-- update status/visibility/featured
-- set featured
-- unset featured
+### 8.8 Aspirations
 
 | Method | Endpoint | Kegunaan |
 |---|---|---|
 | GET | `/api/v1/admin/aspirations/submissions/` | List submission |
 | GET | `/api/v1/admin/aspirations/submissions/{id}/` | Detail submission |
 | PATCH | `/api/v1/admin/aspirations/submissions/{id}/` | Update submission |
-| POST | `/api/v1/admin/aspirations/submissions/{id}/set-featured/` | Tandai featured |
-| POST | `/api/v1/admin/aspirations/submissions/{id}/unset-featured/` | Lepas featured |
+| POST | `/api/v1/admin/aspirations/submissions/{id}/set-featured/` | Set featured |
+| POST | `/api/v1/admin/aspirations/submissions/{id}/unset-featured/` | Unset featured |
 
 Filter/search:
 
-- `search`
-- `ordering`
 - `status`
 - `visibility`
 - `is_featured`
+- `search`
+- `ordering`
 
-Contoh item list admin:
+Field admin detail:
 
-```json
-{
-  "id": "uuid",
-  "ticket_id": "ASP-1A2B3C4D5E",
-  "full_name": "Rina Putri",
-  "npm": "22123456",
-  "email": "rina@example.com",
-  "title": "Perbaikan WiFi Gedung A",
-  "status": "submitted",
-  "visibility": "anonymous",
-  "is_featured": false,
-  "upvote_count": 12,
-  "vote_count": 7,
-  "created_at": "2026-03-15T05:30:00Z",
-  "updated_at": "2026-03-15T05:30:00Z"
-}
-```
+- seluruh field model tersedia, termasuk `full_name`, `npm`, `email`, `evidence_attachment`, `ticket_id`, `status`, `visibility`, `is_featured`, `upvote_count`, `vote_count`
 
 Business rules:
 
-- featured maksimal 6 item
-- hanya status `investigating` atau `resolved` yang boleh menjadi featured
+- featured maksimum `6`
+- hanya `investigating` atau `resolved` yang boleh menjadi featured
+- `ticket_id`, `upvote_count`, dan `vote_count` tidak editable dari admin serializer
+- setiap perubahan penting akan menulis `AspirationActivityLog`
 
-## 9. Saran Implementasi Frontend
+## 9. Catatan Operasional Frontend
 
-- untuk endpoint list, cek dulu apakah data ada di `data.items`
-- untuk endpoint singleton, baca data langsung dari `data`
-- jangan asumsikan semua list endpoint punya bentuk yang sama
-- untuk field media/file, handle `null`
-- untuk aspiration tracking, jangan berharap data sensitif seperti `email` atau `npm`
-- untuk embed URL / embed code, lakukan sanitasi render di frontend
+- Untuk endpoint list, cek apakah payload berada di `data.items`
+- Untuk endpoint singleton, baca object langsung dari `data`
+- Jangan asumsi semua list punya bentuk yang sama karena ada endpoint custom seperti `repository`, `featured`, dan `ticket-log`
+- Untuk render embed code atau embed URL, tetap lakukan sanitasi frontend yang aman
+- Untuk file upload aspiration, gunakan `multipart/form-data`
+- Frontend sebaiknya menangani `429 Too Many Requests`
+- Frontend admin sebaiknya meng-handle `401`, `403`, dan rotasi refresh token
 
-Contoh generic type yang aman:
+Contoh type aman:
 
 ```ts
 type ApiResponse<T> = {
@@ -1002,7 +738,7 @@ type ApiResponse<T> = {
 };
 ```
 
-Contoh paginated:
+Contoh pagination:
 
 ```ts
 type Paginated<T> = {
@@ -1018,8 +754,22 @@ type Paginated<T> = {
 };
 ```
 
-## 10. Useful Docs
+## 10. Catatan Operasional Backend
 
+Hal yang perlu diperhatikan saat project ini dijalankan di server:
+
+- Production harus memakai `DJANGO_SETTINGS_MODULE=config.settings.prod`
+- `DATABASE_URL` wajib mengarah ke PostgreSQL
+- `DJANGO_ALLOWED_HOSTS`, `DJANGO_CORS_ALLOWED_ORIGINS`, dan `DJANGO_CSRF_TRUSTED_ORIGINS` harus sesuai domain production
+- Static file bisa dilayani WhiteNoise setelah `collectstatic`
+- Media file tetap perlu dilayani oleh reverse proxy seperti Nginx
+- SMTP harus valid jika endpoint aspiration submit dibuka ke publik
+- Jika Anda memakai banyak gunicorn worker dan ingin analytics visitor lebih akurat, gunakan cache terpusat seperti Redis
+
+## 11. Useful URLs
+
+- Checker API: `/check-api/`
+- API root: `/api/v1/`
 - Swagger UI: `/api/schema/swagger-ui/`
 - ReDoc: `/api/schema/redoc/`
-- Raw OpenAPI schema: `/api/schema/`
+- Raw schema: `/api/schema/`
