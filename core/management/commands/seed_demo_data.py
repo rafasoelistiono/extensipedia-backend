@@ -17,11 +17,14 @@ class Command(BaseCommand):
 
     @staticmethod
     def build_agenda_description(topic, audience, highlight):
-        return (
+        description = (
             f"{topic} dirancang untuk {audience}. Agenda ini merangkum manfaat utama, alur pendaftaran, "
             f"dokumen yang perlu disiapkan, dan fokus persiapan agar peserta lebih siap menghadapi deadline. "
             f"{highlight}"
         )
+        if len(description) > 300:
+            return f"{description[:297].rstrip()}..."
+        return description
 
     def handle(self, *args, **options):
         self.seed_about()

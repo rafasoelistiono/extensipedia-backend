@@ -521,15 +521,13 @@
           <select id="apiBaseUrlMode" class="select base-url-select">
             <option value="auto">Auto Detect</option>
             <option value="local">Local 127.0.0.1</option>
-            <option value="vps">VPS IP</option>
-            <option value="railway">Railway Production</option>
             <option value="custom">Custom URL</option>
           </select>
           <input
             id="apiBaseUrlCustom"
             class="input base-url-input"
             type="text"
-            placeholder="http://203.194.113.185"
+            placeholder="http://127.0.0.1:8000"
             style="display:none;"
           />
         </div>
@@ -760,8 +758,6 @@
 
   <script>
     const LOCAL_API_BASE_URL = "http://127.0.0.1:8000";
-    const VPS_API_BASE_URL = "http://203.194.113.185";
-    const RAILWAY_API_BASE_URL = "https://extensipedia-backend-production.up.railway.app";
     const API_BASE_URL_STORAGE_KEY = "checker.customApiBaseUrl";
     const endpoints = {
       cabinetCalendar: "/api/v1/public/about/cabinet-calendar/",
@@ -829,9 +825,7 @@
     function getSelectedApiBaseUrl() {
       const mode = document.getElementById("apiBaseUrlMode")?.value || "auto";
       if (mode === "local") return LOCAL_API_BASE_URL;
-      if (mode === "vps") return VPS_API_BASE_URL;
-      if (mode === "railway") return RAILWAY_API_BASE_URL;
-      if (mode === "custom") return getCustomApiBaseUrl() || VPS_API_BASE_URL;
+      if (mode === "custom") return getCustomApiBaseUrl() || LOCAL_API_BASE_URL;
       return resolveAutoApiBaseUrl();
     }
 

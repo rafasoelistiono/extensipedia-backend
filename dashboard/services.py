@@ -34,6 +34,14 @@ LOCAL_DASHBOARD_USERS = (
         "is_superuser": False,
     },
     {
+        "email": "karir@extensipedia.local",
+        "dashboard_username": "karir",
+        "full_name": "Admin Karir",
+        "dashboard_access_scope": "career",
+        "is_staff": True,
+        "is_superuser": False,
+    },
+    {
         "email": "advokasi@extensipedia.local",
         "dashboard_username": "advokasi",
         "full_name": "Admin Advokasi",

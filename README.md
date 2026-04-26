@@ -7,7 +7,7 @@ Repo ini menyediakan:
 - public API di `/api/v1/public/...`
 - admin API di `/api/v1/admin/...`
 - custom admin dashboard berbasis template di `/admin/`
-- halaman checker sederhana di `/` untuk melihat hasil fetch API
+- halaman checker sederhana di `/check-api/` untuk melihat hasil fetch API
 
 ## Apa Yang Perlu Diketahui
 
@@ -19,7 +19,7 @@ Kalau baru pertama kali buka repo ini, urutan paling cepatnya:
 4. jalankan server
 5. buka `/admin/` untuk dashboard
 6. buka `/api/schema/swagger-ui/` untuk melihat schema API
-7. buka `/` untuk melihat checker halaman fetch API
+7. buka `/check-api/` untuk melihat checker halaman fetch API
 
 `manage.py` di repo ini default memakai:
 
@@ -102,7 +102,7 @@ Kalau ingin eksplisit memakai interpreter venv:
 
 Saat server aktif, URL yang paling sering dipakai:
 
-- Home checker: `http://127.0.0.1:8000/`
+- Home checker: `http://127.0.0.1:8000/check-api/`
 - Custom admin dashboard: `http://127.0.0.1:8000/admin/`
 - Django admin bawaan: `http://127.0.0.1:8000/django-admin/`
 - API root: `http://127.0.0.1:8000/api/v1/`
@@ -130,7 +130,10 @@ username: akademik
 akses: dashboard, tentang kami, akademik, profile
 
 username: kompetensi
-akses: dashboard, tentang kami, kompetensi, karir, profile
+akses: dashboard, tentang kami, kompetensi, profile
+
+username: karir
+akses: dashboard, tentang kami, karir, profile
 
 username: advokasi
 akses: dashboard, tentang kami, aspirasi, lacak tiket, profile
@@ -147,7 +150,7 @@ Paling berguna:
 
 - buka [api.md](c:/projek/extensipedia-backend/api.md) untuk panduan endpoint yang lebih manusiawi
 - buka Swagger UI untuk schema teknis
-- buka `/` untuk melihat contoh hasil fetch public API secara visual
+- buka `/check-api/` untuk melihat contoh hasil fetch public API secara visual
 
 Yang biasa diambil frontend:
 
@@ -186,7 +189,7 @@ Area utama project:
 
 ### 1. Cek hasil public API
 
-- buka `/`
+- buka `/check-api/`
 - klik `Fetch` di section yang ingin dicek
 - lihat preview dan raw JSON
 
@@ -220,35 +223,6 @@ Menjalankan test modul tertentu:
 ```bash
 python manage.py test about.tests --settings=config.settings.test
 python manage.py test dashboard.tests --settings=config.settings.test
-```
-
-## Deploy Ke Railway
-
-Repo ini sudah disiapkan untuk Railway dengan:
-
-- [railway.toml](c:/projek/extensipedia-backend/railway.toml)
-- [railway.env.example](c:/projek/extensipedia-backend/railway.env.example)
-
-Langkah singkat:
-
-1. push repo ke GitHub
-2. buat project baru di Railway dari repo ini
-3. tambahkan service PostgreSQL
-4. buka tab `Variables` pada service backend
-5. copy isi [railway.env.example](c:/projek/extensipedia-backend/railway.env.example) ke `RAW Editor`
-6. ganti `DJANGO_SECRET_KEY`, email SMTP, dan pastikan nama service database di `DATABASE_URL=${{Postgres.DATABASE_URL}}` sesuai nama service PostgreSQL Railway Anda
-7. deploy ulang
-
-Catatan:
-
-- `DJANGO_ALLOWED_HOSTS` sudah mencakup `.up.railway.app` dan `healthcheck.railway.app`
-- `DJANGO_CSRF_TRUSTED_ORIGINS` sudah disiapkan untuk domain Railway wildcard
-- `DJANGO_SECURE_SSL_REDIRECT=False` dan `DJANGO_SECURE_HSTS_SECONDS=0` dipakai lebih dulu agar deploy awal lebih aman dari masalah redirect/healthcheck
-- setelah domain Railway sudah stabil, Anda bisa mengaktifkan lagi:
-
-```env
-DJANGO_SECURE_SSL_REDIRECT=True
-DJANGO_SECURE_HSTS_SECONDS=31536000
 ```
 
 ## Seed Demo Data
@@ -306,6 +280,5 @@ Kalau pakai Gmail, gunakan App Password, bukan password Gmail biasa.
 ## Dokumen Yang Perlu Dibaca Setelah README
 
 - [api.md](c:/projek/extensipedia-backend/api.md)
-- [DEPLOY_VPS_FULLSTACK.md](c:/projek/extensipedia-backend/DEPLOY_VPS_FULLSTACK.md)
 - [config/settings/base.py](c:/projek/extensipedia-backend/config/settings/base.py)
 - [dashboard/services.py](c:/projek/extensipedia-backend/dashboard/services.py)

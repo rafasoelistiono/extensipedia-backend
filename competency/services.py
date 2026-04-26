@@ -20,10 +20,13 @@ def winner_slide_table_exists(using=None):
 
 
 def build_empty_winner_slide(slot_number):
-    return CompetencyWinnerSlide(
+    slide = CompetencyWinnerSlide(
         display_order=slot_number,
         alt_text=get_default_winner_slide_alt_text(slot_number),
     )
+    slide.pk = None
+    slide.id = None
+    return slide
 
 
 def ensure_winner_slide_slots(using=None):

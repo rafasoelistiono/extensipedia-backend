@@ -19,3 +19,9 @@ CACHES = {
         "LOCATION": "extensipedia-test-cache",
     }
 }
+
+MIDDLEWARE = [  # noqa: F405
+    middleware
+    for middleware in MIDDLEWARE
+    if middleware != "whitenoise.middleware.WhiteNoiseMiddleware"
+]

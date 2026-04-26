@@ -98,5 +98,5 @@ class CompetencyWinnerSlidePublicSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(url)
         return url
 
-    def get_image_url(self, obj):
+    def get_image_url(self, obj) -> str | None:
         return self.build_absolute_url(obj.image)

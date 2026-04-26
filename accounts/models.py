@@ -15,6 +15,7 @@ class User(BaseModel, AbstractUser):
         FULL = "full", "Superadmin"
         ACADEMIC = "academic", "Akademik"
         COMPETENCY = "competency", "Kompetensi"
+        CAREER = "career", "Karir"
         ADVOCACY = "advocacy", "Advokasi"
 
     DASHBOARD_SECTION_ACCESS = {
@@ -29,7 +30,8 @@ class User(BaseModel, AbstractUser):
             "profile",
         ),
         DashboardAccessScopes.ACADEMIC: ("dashboard", "about", "academic", "profile"),
-        DashboardAccessScopes.COMPETENCY: ("dashboard", "about", "competency", "career", "profile"),
+        DashboardAccessScopes.COMPETENCY: ("dashboard", "about", "competency", "profile"),
+        DashboardAccessScopes.CAREER: ("dashboard", "about", "career", "profile"),
         DashboardAccessScopes.ADVOCACY: ("dashboard", "about", "aspirations", "tickets", "profile"),
     }
 

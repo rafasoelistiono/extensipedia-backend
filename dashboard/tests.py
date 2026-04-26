@@ -1,11 +1,13 @@
-import base64
+from io import BytesIO
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
+from PIL import Image
 
 from accounts.models import User
 from competency.models import CompetencyWinnerSlide
+from dashboard.services import LOCAL_DASHBOARD_PASSWORD, ensure_local_development_dashboard_users
 
 
 class DashboardAccessTests(TestCase):
@@ -39,6 +41,28 @@ class DashboardAccessTests(TestCase):
         self.assertEqual(self.client.get(reverse("dashboard:aspiration-list")).status_code, 403)
         self.assertEqual(self.client.get(reverse("dashboard:ticket-tracking")).status_code, 403)
 
+    def test_competency_and_career_users_access_separate_sections(self):
+        competency_user = self.create_dashboard_user(
+            username="kompetensi",
+            scope=User.DashboardAccessScopes.COMPETENCY,
+        )
+        self.client.force_login(competency_user)
+
+        self.assertEqual(self.client.get(reverse("dashboard:competency")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("dashboard:career")).status_code, 403)
+
+        self.client.logout()
+        career_user = self.create_dashboard_user(username="karir", scope=User.DashboardAccessScopes.CAREER)
+        self.client.force_login(career_user)
+
+        self.assertEqual(self.client.get(reverse("dashboard:home")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("dashboard:about")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("dashboard:career")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("dashboard:profile")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("dashboard:competency")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("dashboard:academic")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("dashboard:aspiration-list")).status_code, 403)
+
     def test_profile_can_update_dashboard_username_and_password(self):
         user = self.create_dashboard_user(username="advokasi", scope=User.DashboardAccessScopes.ADVOCACY)
         self.client.force_login(user)
@@ -64,13 +88,39 @@ class DashboardAccessTests(TestCase):
         )
         self.assertRedirects(relogin_response, reverse("dashboard:home"))
 
+    @override_settings(DEBUG=True)
+    def test_local_dashboard_bootstrap_creates_five_default_accounts(self):
+        users = ensure_local_development_dashboard_users()
+
+        self.assertEqual(set(users), {"superadmin", "akademik", "kompetensi", "karir", "advokasi"})
+        self.assertTrue(users["superadmin"].is_superuser)
+        self.assertEqual(users["akademik"].dashboard_access_scope, User.DashboardAccessScopes.ACADEMIC)
+        self.assertEqual(users["kompetensi"].dashboard_access_scope, User.DashboardAccessScopes.COMPETENCY)
+        self.assertEqual(users["karir"].dashboard_access_scope, User.DashboardAccessScopes.CAREER)
+        self.assertEqual(users["advokasi"].dashboard_access_scope, User.DashboardAccessScopes.ADVOCACY)
+        self.assertTrue(users["karir"].check_password(LOCAL_DASHBOARD_PASSWORD))
+
+    @override_settings(DEBUG=True)
+    def test_local_dashboard_bootstrap_does_not_reset_profile_credentials(self):
+        users = ensure_local_development_dashboard_users()
+        career_user = users["karir"]
+        career_user.dashboard_username = "karir-baru"
+        career_user.set_password("passwordbaru123")
+        career_user.save(update_fields=["dashboard_username", "password"])
+
+        ensure_local_development_dashboard_users()
+
+        career_user.refresh_from_db()
+        self.assertEqual(career_user.dashboard_username, "karir-baru")
+        self.assertTrue(career_user.check_password("passwordbaru123"))
+
 
 def build_test_image(name="winner-slide.png"):
+    buffer = BytesIO()
+    Image.new("RGB", (2, 2), color=(12, 34, 56)).save(buffer, format="PNG")
     return SimpleUploadedFile(
         name,
-        base64.b64decode(
-            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9p6k9TQAAAAASUVORK5CYII="
-        ),
+        buffer.getvalue(),
         content_type="image/png",
     )
 

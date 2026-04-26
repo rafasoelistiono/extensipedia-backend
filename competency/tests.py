@@ -1,5 +1,5 @@
-import base64
 from datetime import timedelta
+from io import BytesIO
 
 from django import forms
 from django.core.exceptions import ValidationError
@@ -7,6 +7,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from django.core.files.uploadedfile import SimpleUploadedFile
+from PIL import Image
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -42,11 +43,11 @@ def build_short_description(seed):
 
 
 def build_test_image(name="slide.png"):
+    buffer = BytesIO()
+    Image.new("RGB", (2, 2), color=(12, 34, 56)).save(buffer, format="PNG")
     return SimpleUploadedFile(
         name,
-        base64.b64decode(
-            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9p6k9TQAAAAASUVORK5CYII="
-        ),
+        buffer.getvalue(),
         content_type="image/png",
     )
 
