@@ -52,6 +52,7 @@ class AgendaCardPublicSerializer(serializers.ModelSerializer):
             "pricing_tag",
             "deadline_date",
             "registration_link",
+            "team_finding_link",
             "google_calendar_link",
             "countdown_days",
         )

@@ -619,10 +619,25 @@
         </div>
       </section>
 
+      <section class="section-card" data-section="academicDigitalResources">
+        <div class="section-head">
+          <div class="section-title-wrap">
+            <h2>6. AKADEMIK - PENUNJANG DIGITAL RESOURCE LINKS</h2>
+            <div class="section-endpoint" data-endpoint-label></div>
+            <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
+          </div>
+          <div class="button-row"><button class="btn small primary" data-fetch-btn>Fetch</button></div>
+        </div>
+        <div class="section-body grid-two">
+          <div class="preview-box"><h3 class="box-title">Preview</h3><div data-preview></div></div>
+          <div class="json-box"><h3 class="box-title">Raw JSON</h3><pre data-json>Not fetched yet.</pre></div>
+        </div>
+      </section>
+
       <section class="section-card" data-section="winnerSlides">
         <div class="section-head">
           <div class="section-title-wrap">
-            <h2>6. KOMPETENSI - WINNER SLIDES</h2>
+            <h2>7. KOMPETENSI - WINNER SLIDES</h2>
             <div class="section-endpoint" data-endpoint-label></div>
             <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
           </div>
@@ -637,7 +652,7 @@
       <section class="section-card" data-section="competency">
         <div class="section-head">
           <div class="section-title-wrap">
-            <h2>7. KOMPETENSI</h2>
+            <h2>8. KOMPETENSI</h2>
             <div class="section-endpoint" data-endpoint-label></div>
             <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
           </div>
@@ -662,7 +677,22 @@
       <section class="section-card" data-section="career">
         <div class="section-head">
           <div class="section-title-wrap">
-            <h2>8. KARIR</h2>
+            <h2>9. KARIR</h2>
+            <div class="section-endpoint" data-endpoint-label></div>
+            <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
+          </div>
+          <div class="button-row"><button class="btn small primary" data-fetch-btn>Fetch</button></div>
+        </div>
+        <div class="section-body grid-two">
+          <div class="preview-box"><h3 class="box-title">Preview</h3><div data-preview></div></div>
+          <div class="json-box"><h3 class="box-title">Raw JSON</h3><pre data-json>Not fetched yet.</pre></div>
+        </div>
+      </section>
+
+      <section class="section-card" data-section="advocacyPolicyResources">
+        <div class="section-head">
+          <div class="section-title-wrap">
+            <h2>10. ADVOKASI &amp; LITERASI KEBIJAKAN RESOURCE LINKS</h2>
             <div class="section-endpoint" data-endpoint-label></div>
             <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
           </div>
@@ -677,7 +707,7 @@
       <section class="section-card" data-section="aspirations">
         <div class="section-head">
           <div class="section-title-wrap">
-            <h2>9. ASPIRASI FEATURED</h2>
+            <h2>11. ASPIRASI FEATURED</h2>
             <div class="section-endpoint" data-endpoint-label></div>
             <div class="section-meta"><span class="badge idle" data-status-badge>Idle</span><span data-last-fetched>Last successful fetch: -</span></div>
           </div>
@@ -696,7 +726,7 @@
       <section class="section-card" id="submitTesterSection">
         <div class="section-head">
           <div class="section-title-wrap">
-            <h2>10. ASPIRASI SUBMIT TESTER</h2>
+            <h2>12. ASPIRASI SUBMIT TESTER</h2>
             <div class="section-endpoint" id="submitEndpointLabel"></div>
             <div class="section-meta"><span class="badge idle" id="submitStatusBadge">Idle</span><span id="submitLastFetched">Last successful submit: -</span></div>
           </div>
@@ -727,7 +757,7 @@
       <section class="section-card" id="trackTesterSection">
         <div class="section-head">
           <div class="section-title-wrap">
-            <h2>11. LACAK TIKET TESTER</h2>
+            <h2>13. LACAK TIKET TESTER</h2>
             <div class="section-endpoint" id="trackEndpointLabel"></div>
             <div class="section-meta"><span class="badge idle" id="trackStatusBadge">Idle</span><span id="trackLastFetched">Last successful fetch: -</span></div>
           </div>
@@ -765,9 +795,11 @@
       repositories: "/api/v1/public/academic/repositories",
       youtube: "/api/v1/public/academic/youtube",
       countdowns: "/api/v1/public/academic/countdowns",
+      academicDigitalResources: "/api/v1/public/academic/digital-resources",
       winnerSlides: "/api/v1/public/competency/winner-slides/",
       competency: "/api/v1/public/competency/agendas",
       career: "/api/v1/public/career/resources",
+      advocacyPolicyResources: "/api/v1/public/advocacy/policy-resources",
       aspirations: "/api/v1/public/aspirations/featured",
       submitAspiration: "/api/v1/public/aspirations/submit/",
       trackTicket: "/api/v1/public/tickets/track",
@@ -781,9 +813,11 @@
       repositories: ["/api/v1/public/academic/repository/"],
       youtube: ["/api/v1/public/academic/youtube/"],
       countdowns: ["/api/v1/public/academic/countdown-events/"],
+      academicDigitalResources: ["/api/v1/public/academic/digital-resources/"],
       winnerSlides: ["/api/v1/public/competency/winner-slides"],
       competency: ["/api/v1/public/competency/agenda-cards/"],
       career: ["/api/v1/public/career/resources/"],
+      advocacyPolicyResources: ["/api/v1/public/advocacy/policy-resources/"],
       aspirations: ["/api/v1/public/aspirations/featured/"],
       submitAspiration: ["/api/v1/public/aspirations/submit/"],
       trackTicket: ["/api/v1/public/tickets/track/"]
@@ -795,9 +829,11 @@
       repositories: { title: "Repositories", method: "GET" },
       youtube: { title: "YouTube", method: "GET" },
       countdowns: { title: "Countdowns", method: "GET" },
+      academicDigitalResources: { title: "Academic Digital Resources", method: "GET" },
       winnerSlides: { title: "Winner Slides", method: "GET" },
       competency: { title: "Competency", method: "GET" },
       career: { title: "Career", method: "GET" },
+      advocacyPolicyResources: { title: "Advocacy Policy Resources", method: "GET" },
       aspirations: { title: "Featured Aspirations", method: "GET" }
     };
 
@@ -972,6 +1008,8 @@
         case "cabinetCalendar":
         case "youtube":
         case "career":
+        case "academicDigitalResources":
+        case "advocacyPolicyResources":
           return raw && raw.items && !Array.isArray(raw.items) ? raw.items : raw;
         case "quickDownloads":
         case "countdowns":
@@ -1132,6 +1170,7 @@
           ${createField("Deadline", escapeHtml(item.deadline_date || "N/A"))}
           ${createField("Countdown Days", escapeHtml(item.countdown_days ?? "N/A"))}
           ${createField("Registration", item.registration_link ? `<a href="${escapeHtml(item.registration_link)}" target="_blank" rel="noopener">Open registration link</a>` : '<span class="preview-empty">No registration link</span>')}
+          ${createField("Team Finding", item.team_finding_link ? `<a href="${escapeHtml(item.team_finding_link)}" target="_blank" rel="noopener">Open team finding link</a>` : '<span class="preview-empty">No team finding link</span>')}
         </div>
       `).join("")}</div>`;
     }
@@ -1151,6 +1190,42 @@
           ${link ? `<a href="${escapeHtml(link)}" target="_blank" rel="noopener">Open link</a>` : '<div class="preview-empty">No link</div>'}
         </div>
       `).join("")}</div>`;
+    }
+
+    function renderResourceLinksPreview(data, fields, emptyLabel) {
+      if (!data || typeof data !== "object") return `<div class="preview-empty">${escapeHtml(emptyLabel)}</div>`;
+      return `<div class="list">${fields.map(([label, key]) => {
+        const link = data[key] || data?.resources?.[key];
+        return `
+          <div class="mini-card">
+            <h4>${escapeHtml(label)}</h4>
+            ${link ? `<a href="${escapeHtml(link)}" target="_blank" rel="noopener">Open link</a>` : '<div class="preview-empty">No link</div>'}
+          </div>
+        `;
+      }).join("")}</div>`;
+    }
+
+    function renderAcademicDigitalResourcesPreview(data) {
+      return renderResourceLinksPreview(
+        data,
+        [
+          ["Canva Pro Ekstensi", "canva_pro_ekstensi"],
+          ["Gemini Advanced", "gemini_advanced"]
+        ],
+        "No academic digital resources"
+      );
+    }
+
+    function renderAdvocacyPolicyResourcesPreview(data) {
+      return renderResourceLinksPreview(
+        data,
+        [
+          ["SIAK WAR", "siak_war"],
+          ["Cicilan UKT", "cicilan_ukt"],
+          ["Alur SKPI", "alur_skpi"]
+        ],
+        "No advocacy policy resources"
+      );
     }
 
     function renderAspirationsPreview(items) {
@@ -1198,9 +1273,11 @@
         case "repositories": return renderRepositoriesPreview(normalizedData);
         case "youtube": return renderYoutubePreview(normalizedData);
         case "countdowns": return renderCountdownsPreview(normalizedData);
+        case "academicDigitalResources": return renderAcademicDigitalResourcesPreview(normalizedData);
         case "winnerSlides": return renderWinnerSlidesPreview(normalizedData);
         case "competency": return renderCompetencyPreview(normalizedData);
         case "career": return renderCareerPreview(normalizedData);
+        case "advocacyPolicyResources": return renderAdvocacyPolicyResourcesPreview(normalizedData);
         case "aspirations": return renderAspirationsPreview(normalizedData);
         default: return '<div class="preview-empty">No renderer for this section. See raw JSON.</div>';
       }

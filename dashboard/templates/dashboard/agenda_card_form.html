@@ -1,195 +1,207 @@
 {% extends "dashboard/base.html" %}
 
 {% block content %}
-<form method="post" enctype="multipart/form-data" class="agenda-admin-page">
-    {% csrf_token %}
+<form method="post" enctype="multipart/form-data" class="card border-0 shadow-sm" data-agenda-form data-lomba-default-link="{{ form.default_lomba_team_finding_link }}">
+    <div class="card-body p-4">
+        {% csrf_token %}
 
-    <div class="agenda-admin-shell card border-0 shadow-sm overflow-hidden">
-        <div class="agenda-admin-shell-bar"></div>
-        <div class="card-body p-4 p-lg-5">
-            <div class="agenda-admin-header">
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="border rounded-3 p-3 bg-light mb-4">
+            <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap mb-3">
                 <div>
-                    <span class="agenda-admin-kicker">Admin Agenda Kompetensi</span>
-                    <h1 class="agenda-admin-title mb-0">{{ page_title }}</h1>
+                    <div class="small text-muted fw-semibold text-uppercase">Bagian 1</div>
+                    <h2 class="h6 mb-0">Informasi Utama</h2>
+                </div>
+                <div class="badge text-bg-light border" data-description-counter>0 / 300 karakter</div>
+            </div>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label" for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+                    {{ form.title }}
+                    {% if form.title.help_text %}<div class="form-text">{{ form.title.help_text }}</div>{% endif %}
+                    {% for error in form.title.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="{{ form.short_description.id_for_label }}">{{ form.short_description.label }}</label>
+                    {{ form.short_description }}
+                    {% if form.short_description.help_text %}<div class="form-text">{{ form.short_description.help_text }}</div>{% endif %}
+                    {% for error in form.short_description.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                 </div>
             </div>
+        </div>
 
-            {% if form.non_field_errors %}
-                <div class="alert alert-danger mt-4 mb-0">
-                    {% for error in form.non_field_errors %}
-                        <div>{{ error }}</div>
-                    {% endfor %}
+        <div class="border rounded-3 p-3 bg-light mb-4">
+            <div class="mb-3">
+                <div class="small text-muted fw-semibold text-uppercase">Bagian 2</div>
+                <h2 class="h6 mb-0">Tag Agenda</h2>
+            </div>
+            <div class="row g-3">
+                <div class="col-lg-6">
+                    <label class="form-label d-block">{{ form.urgency_tag.label }}</label>
+                    <div class="dashboard-radio-stack">
+                        {% for choice in form.urgency_tag %}
+                            <div class="form-check dashboard-radio-option">
+                                {{ choice.tag }}
+                                <label class="form-check-label" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if form.urgency_tag.help_text %}<div class="form-text">{{ form.urgency_tag.help_text }}</div>{% endif %}
+                    {% for error in form.urgency_tag.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                 </div>
-            {% endif %}
-
-            <div class="agenda-admin-section mt-4">
-                <div class="agenda-admin-section-head">
-                    <div>
-                        <span class="agenda-admin-section-label">Bagian 1</span>
-                        <h2 class="h5 mb-0">Informasi Utama</h2>
+                <div class="col-lg-6">
+                    <label class="form-label d-block">{{ form.recommendation_tag.label }}</label>
+                    <div class="dashboard-radio-stack">
+                        {% for choice in form.recommendation_tag %}
+                            <div class="form-check dashboard-radio-option">
+                                {{ choice.tag }}
+                                <label class="form-check-label" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                            </div>
+                        {% endfor %}
                     </div>
+                    {% if form.recommendation_tag.help_text %}<div class="form-text">{{ form.recommendation_tag.help_text }}</div>{% endif %}
+                    {% for error in form.recommendation_tag.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                 </div>
-                <div class="row g-4 mt-1">
-                    <div class="col-12">
-                        <label class="form-label" for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
-                        {{ form.title }}
-                        {% if form.title.help_text %}<div class="form-text">{{ form.title.help_text }}</div>{% endif %}
-                        {% for error in form.title.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                <div class="col-lg-4">
+                    <label class="form-label d-block">{{ form.category_tag.label }}</label>
+                    <div class="dashboard-radio-stack">
+                        {% for choice in form.category_tag %}
+                            <div class="form-check dashboard-radio-option">
+                                {{ choice.tag }}
+                                <label class="form-check-label" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                            </div>
+                        {% endfor %}
                     </div>
-                    <div class="col-12">
-                        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
-                            <label class="form-label mb-0" for="{{ form.short_description.id_for_label }}">{{ form.short_description.label }}</label>
-                            <div class="agenda-admin-counter" data-description-counter>0 / 300 karakter</div>
-                        </div>
-                        {{ form.short_description }}
-                        {% if form.short_description.help_text %}<div class="form-text">{{ form.short_description.help_text }}</div>{% endif %}
-                        {% for error in form.short_description.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    {% for error in form.category_tag.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-lg-4">
+                    <label class="form-label d-block">{{ form.scope_tag.label }}</label>
+                    <div class="dashboard-radio-stack">
+                        {% for choice in form.scope_tag %}
+                            <div class="form-check dashboard-radio-option">
+                                {{ choice.tag }}
+                                <label class="form-check-label" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                            </div>
+                        {% endfor %}
                     </div>
+                    {% for error in form.scope_tag.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-lg-4">
+                    <label class="form-label d-block">{{ form.pricing_tag.label }}</label>
+                    <div class="dashboard-radio-stack">
+                        {% for choice in form.pricing_tag %}
+                            <div class="form-check dashboard-radio-option">
+                                {{ choice.tag }}
+                                <label class="form-check-label" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% for error in form.pricing_tag.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                 </div>
             </div>
+        </div>
 
-            <div class="agenda-admin-section mt-4">
-                <div class="agenda-admin-section-head">
-                    <div>
-                        <span class="agenda-admin-section-label">Bagian 2</span>
-                        <h2 class="h5 mb-0">Tag Agenda</h2>
-                    </div>
+        <div class="border rounded-3 p-3 bg-light">
+            <div class="mb-3">
+                <div class="small text-muted fw-semibold text-uppercase">Bagian 3</div>
+                <h2 class="h6 mb-0">Jadwal dan Link</h2>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.deadline_date.id_for_label }}">{{ form.deadline_date.label }}</label>
+                    {{ form.deadline_date }}
+                    {% for error in form.deadline_date.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                 </div>
-                <div class="row g-4 mt-1">
-                    <div class="col-lg-6">
-                        <label class="form-label d-block">{{ form.urgency_tag.label }}</label>
-                        <div class="agenda-admin-radio-grid">
-                            {% for choice in form.urgency_tag %}
-                                <label class="agenda-admin-radio-card" for="{{ choice.id_for_label }}">
-                                    {{ choice.tag }}
-                                    <span class="agenda-admin-radio-copy">
-                                        <strong>{{ choice.choice_label }}</strong>
-                                    </span>
-                                </label>
-                            {% endfor %}
-                        </div>
-                        {% if form.urgency_tag.help_text %}<div class="form-text">{{ form.urgency_tag.help_text }}</div>{% endif %}
-                        {% for error in form.urgency_tag.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.registration_link.id_for_label }}">{{ form.registration_link.label }}</label>
+                    {{ form.registration_link }}
+                    {% if form.registration_link.help_text %}<div class="form-text">{{ form.registration_link.help_text }}</div>{% endif %}
+                    {% for error in form.registration_link.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-4" data-team-finding-field hidden>
+                    <label class="form-label" for="{{ form.team_finding_link.id_for_label }}">{{ form.team_finding_link.label }}</label>
+                    {{ form.team_finding_link }}
+                    {% if form.team_finding_link.help_text %}<div class="form-text">{{ form.team_finding_link.help_text }}</div>{% endif %}
+                    {% for error in form.team_finding_link.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.google_calendar_link.id_for_label }}">{{ form.google_calendar_link.label }}</label>
+                    {{ form.google_calendar_link }}
+                    {% if form.google_calendar_link.help_text %}<div class="form-text">{{ form.google_calendar_link.help_text }}</div>{% endif %}
+                    {% for error in form.google_calendar_link.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+                    <div class="form-check border rounded-3 bg-white px-3 py-2">
+                        {{ form.is_active }}
                     </div>
-                    <div class="col-lg-6">
-                        <label class="form-label d-block">{{ form.recommendation_tag.label }}</label>
-                        <div class="agenda-admin-radio-grid">
-                            {% for choice in form.recommendation_tag %}
-                                <label class="agenda-admin-radio-card" for="{{ choice.id_for_label }}">
-                                    {{ choice.tag }}
-                                    <span class="agenda-admin-radio-copy">
-                                        <strong>{{ choice.choice_label }}</strong>
-                                    </span>
-                                </label>
-                            {% endfor %}
-                        </div>
-                        {% if form.recommendation_tag.help_text %}<div class="form-text">{{ form.recommendation_tag.help_text }}</div>{% endif %}
-                        {% for error in form.recommendation_tag.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
-                    <div class="col-lg-4">
-                        <label class="form-label d-block">{{ form.category_tag.label }}</label>
-                        <div class="agenda-admin-radio-stack">
-                            {% for choice in form.category_tag %}
-                                <label class="agenda-admin-radio-card" for="{{ choice.id_for_label }}">
-                                    {{ choice.tag }}
-                                    <span class="agenda-admin-radio-copy">
-                                        <strong>{{ choice.choice_label }}</strong>
-                                    </span>
-                                </label>
-                            {% endfor %}
-                        </div>
-                        {% for error in form.category_tag.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
-                    <div class="col-lg-4">
-                        <label class="form-label d-block">{{ form.scope_tag.label }}</label>
-                        <div class="agenda-admin-radio-stack">
-                            {% for choice in form.scope_tag %}
-                                <label class="agenda-admin-radio-card" for="{{ choice.id_for_label }}">
-                                    {{ choice.tag }}
-                                    <span class="agenda-admin-radio-copy">
-                                        <strong>{{ choice.choice_label }}</strong>
-                                    </span>
-                                </label>
-                            {% endfor %}
-                        </div>
-                        {% for error in form.scope_tag.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
-                    <div class="col-lg-4">
-                        <label class="form-label d-block">{{ form.pricing_tag.label }}</label>
-                        <div class="agenda-admin-radio-stack">
-                            {% for choice in form.pricing_tag %}
-                                <label class="agenda-admin-radio-card" for="{{ choice.id_for_label }}">
-                                    {{ choice.tag }}
-                                    <span class="agenda-admin-radio-copy">
-                                        <strong>{{ choice.choice_label }}</strong>
-                                    </span>
-                                </label>
-                            {% endfor %}
-                        </div>
-                        {% for error in form.pricing_tag.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
+                    {% for error in form.is_active.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                 </div>
             </div>
+        </div>
 
-            <div class="agenda-admin-section mt-4">
-                <div class="agenda-admin-section-head">
-                    <div>
-                        <span class="agenda-admin-section-label">Bagian 3</span>
-                        <h2 class="h5 mb-0">Jadwal dan Link</h2>
-                    </div>
-                </div>
-                <div class="row g-4 mt-1">
-                    <div class="col-md-4">
-                        <label class="form-label" for="{{ form.deadline_date.id_for_label }}">{{ form.deadline_date.label }}</label>
-                        {{ form.deadline_date }}
-                        {% for error in form.deadline_date.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label" for="{{ form.registration_link.id_for_label }}">{{ form.registration_link.label }}</label>
-                        {{ form.registration_link }}
-                        {% for error in form.registration_link.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
-                        <div class="agenda-admin-switch-wrap">
-                            {{ form.is_active }}
-                        </div>
-                        {% for error in form.is_active.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label" for="{{ form.google_calendar_link.id_for_label }}">{{ form.google_calendar_link.label }}</label>
-                        {{ form.google_calendar_link }}
-                        {% for error in form.google_calendar_link.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
-                </div>
-            </div>
-
-            <div class="agenda-admin-actions mt-4">
-                <button type="submit" class="btn btn-dark btn-lg">{{ submit_label }}</button>
-                <a href="{{ cancel_url }}" class="btn btn-outline-secondary btn-lg">Batal</a>
-            </div>
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-dark btn-lg">{{ submit_label }}</button>
+            <a href="{{ cancel_url }}" class="btn btn-outline-secondary btn-lg">Batal</a>
         </div>
     </div>
 </form>
 
 <script>
     (() => {
+        const form = document.querySelector("[data-agenda-form]");
+        if (!form) return;
+
         const textarea = document.getElementById("id_short_description");
         const counter = document.querySelector("[data-description-counter]");
-        const maxLength = 300;
-
-        if (!textarea || !counter) {
-            return;
-        }
+        const categoryInputs = form.querySelectorAll('input[name="category_tag"]');
+        const teamFindingField = document.querySelector("[data-team-finding-field]");
+        const teamFindingInput = document.getElementById("id_team_finding_link");
+        const defaultLombaLink = form.dataset.lombaDefaultLink || "";
+        let autoFilledLombaLink = false;
 
         const syncCounter = () => {
+            if (!textarea || !counter) return;
             const currentLength = textarea.value.trim().length;
-            counter.textContent = `${currentLength} / ${maxLength} karakter`;
-            counter.classList.toggle("is-ready", currentLength <= maxLength);
+            counter.textContent = `${currentLength} / 300 karakter`;
+            counter.className = `badge border ${currentLength <= 300 ? "text-bg-success" : "text-bg-danger"}`;
         };
 
-        textarea.addEventListener("input", syncCounter);
+        const getSelectedCategory = () => Array.from(categoryInputs).find((input) => input.checked)?.value || "";
+
+        const syncLombaLink = () => {
+            if (!categoryInputs.length || !teamFindingField || !teamFindingInput) return;
+            const isLomba = getSelectedCategory() === "lomba";
+            teamFindingField.hidden = !isLomba;
+
+            if (isLomba && (!teamFindingInput.value.trim() || autoFilledLombaLink)) {
+                teamFindingInput.value = defaultLombaLink;
+                autoFilledLombaLink = true;
+            }
+
+            if (!isLomba && autoFilledLombaLink && teamFindingInput.value.trim() === defaultLombaLink) {
+                teamFindingInput.value = "";
+                autoFilledLombaLink = false;
+            }
+        };
+
+        if (textarea) textarea.addEventListener("input", syncCounter);
+        categoryInputs.forEach((input) => input.addEventListener("change", syncLombaLink));
+        if (teamFindingInput) {
+            teamFindingInput.addEventListener("input", () => {
+                autoFilledLombaLink = teamFindingInput.value.trim() === defaultLombaLink;
+            });
+        }
+
         syncCounter();
+        syncLombaLink();
     })();
 </script>
 {% endblock %}

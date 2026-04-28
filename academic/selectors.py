@@ -1,4 +1,11 @@
-from academic.models import AcademicService, CountdownEvent, QuickDownloadItem, RepositoryMaterial, YouTubeSection
+from academic.models import (
+    AcademicDigitalResourceConfiguration,
+    AcademicService,
+    CountdownEvent,
+    QuickDownloadItem,
+    RepositoryMaterial,
+    YouTubeSection,
+)
 
 
 def get_public_academic_services():
@@ -35,3 +42,7 @@ def get_public_countdown_events():
 
 def get_admin_countdown_events():
     return CountdownEvent.objects.select_related("created_by", "updated_by").all()
+
+
+def get_admin_academic_digital_resource_configurations():
+    return AcademicDigitalResourceConfiguration.objects.select_related("created_by", "updated_by").all()

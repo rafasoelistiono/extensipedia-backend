@@ -3,9 +3,17 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
 from about.models import CabinetCalendar
-from academic.models import CountdownEvent, QuickDownloadItem, RepositoryMaterial, YouTubeSection
+from academic.models import (
+    AcademicDigitalResourceConfiguration,
+    CountdownEvent,
+    QuickDownloadItem,
+    RepositoryMaterial,
+    YouTubeSection,
+)
+from advocacy.models import AdvocacyPolicyResourceConfiguration
 from aspirations.models import AspirationSubmission
 from career.models import CareerResourceConfiguration
+from competency.constants import DEFAULT_LOMBA_CARI_TIM_LINK
 from competency.models import AgendaCard, CompetencyWinnerSlide
 
 
@@ -162,7 +170,7 @@ class CountdownEventForm(DashboardModelForm):
 
 
 class AgendaCardForm(DashboardModelForm):
-    BOOLEAN_TAG_CHOICES = ((True, "True"), (False, "False"))
+    BOOLEAN_TAG_CHOICES = ((True, "Ya"), (False, "Tidak"))
 
     urgency_tag = forms.TypedChoiceField(
         choices=BOOLEAN_TAG_CHOICES,
@@ -174,6 +182,8 @@ class AgendaCardForm(DashboardModelForm):
         coerce=coerce_boolean_choice,
         widget=forms.RadioSelect,
     )
+    registration_link = forms.URLField(required=False)
+    team_finding_link = forms.URLField(required=False)
 
     class Meta:
         model = AgendaCard
@@ -187,6 +197,7 @@ class AgendaCardForm(DashboardModelForm):
             "pricing_tag",
             "deadline_date",
             "registration_link",
+            "team_finding_link",
             "google_calendar_link",
             "is_active",
         )
@@ -200,9 +211,46 @@ class AgendaCardForm(DashboardModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.default_lomba_team_finding_link = DEFAULT_LOMBA_CARI_TIM_LINK
+        self.fields["title"].label = "Judul Agenda"
+        self.fields["short_description"].label = "Deskripsi Singkat"
+        self.fields["urgency_tag"].label = "Urgensi"
+        self.fields["recommendation_tag"].label = "Rekomendasi"
+        self.fields["category_tag"].label = "Kategori"
+        self.fields["scope_tag"].label = "Cakupan"
+        self.fields["pricing_tag"].label = "Biaya"
+        self.fields["deadline_date"].label = "Deadline"
+        self.fields["registration_link"].label = "Link Pendaftaran"
+        self.fields["team_finding_link"].label = "Link Cari Tim"
+        self.fields["google_calendar_link"].label = "Google Calendar Link"
+        self.fields["is_active"].label = "Aktif"
         self.fields["short_description"].help_text = "Maksimal 300 karakter."
-        self.fields["urgency_tag"].help_text = "Gunakan nilai boolean true atau false."
-        self.fields["recommendation_tag"].help_text = "Gunakan nilai boolean true atau false."
+        self.fields["urgency_tag"].help_text = "Tandai jika agenda perlu diprioritaskan."
+        self.fields["recommendation_tag"].help_text = "Tandai jika agenda direkomendasikan."
+        self.fields["registration_link"].help_text = "Isi link pendaftaran agenda."
+        self.fields["team_finding_link"].help_text = (
+            "Khusus kategori Lomba. Jika dikosongkan akan otomatis memakai link WAG cari tim default."
+        )
+        self.fields["google_calendar_link"].help_text = "Opsional."
+
+    def clean(self):
+        cleaned_data = super().clean()
+        category = cleaned_data.get("category_tag")
+        registration_link = cleaned_data.get("registration_link")
+        team_finding_link = cleaned_data.get("team_finding_link")
+
+        if self.errors.get("registration_link"):
+            return cleaned_data
+
+        if category and not registration_link:
+            self.add_error("registration_link", "Isi link pendaftaran untuk agenda ini.")
+
+        if category == AgendaCard.CategoryTag.LOMBA and not team_finding_link:
+            cleaned_data["team_finding_link"] = DEFAULT_LOMBA_CARI_TIM_LINK
+        elif category != AgendaCard.CategoryTag.LOMBA:
+            cleaned_data["team_finding_link"] = ""
+
+        return cleaned_data
 
 
 class CompetencyWinnerSlideForm(DashboardModelForm):
@@ -229,6 +277,18 @@ class CareerResourceConfigurationForm(DashboardModelForm):
             "salary_script",
             "case_study_interview_prep",
         )
+
+
+class AcademicDigitalResourceConfigurationForm(DashboardModelForm):
+    class Meta:
+        model = AcademicDigitalResourceConfiguration
+        fields = ("canva_pro_ekstensi", "gemini_advanced")
+
+
+class AdvocacyPolicyResourceConfigurationForm(DashboardModelForm):
+    class Meta:
+        model = AdvocacyPolicyResourceConfiguration
+        fields = ("siak_war", "cicilan_ukt", "alur_skpi")
 
 
 class AspirationUpdateForm(DashboardModelForm):

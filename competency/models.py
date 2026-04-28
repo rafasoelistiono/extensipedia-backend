@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator
 from django.db import models
 
+from competency.constants import DEFAULT_LOMBA_CARI_TIM_LINK
 from core.models import BaseModel, SlugModelMixin, image_upload_to
 from core.validators import validate_file_size, validate_image_extension
 
@@ -50,6 +51,7 @@ class AgendaCard(BaseModel):
     pricing_tag = models.CharField(max_length=100, choices=PricingTag.choices)
     deadline_date = models.DateField()
     registration_link = models.URLField()
+    team_finding_link = models.URLField(blank=True)
     google_calendar_link = models.URLField(blank=True)
     is_active = models.BooleanField(default=True)
 
@@ -60,6 +62,11 @@ class AgendaCard(BaseModel):
         return self.title
 
     def clean(self):
+        if self.category_tag == self.CategoryTag.LOMBA and not self.team_finding_link:
+            self.team_finding_link = DEFAULT_LOMBA_CARI_TIM_LINK
+        elif self.category_tag != self.CategoryTag.LOMBA:
+            self.team_finding_link = ""
+
         queryset = self.__class__.objects.all()
         if self.pk:
             queryset = queryset.exclude(pk=self.pk)

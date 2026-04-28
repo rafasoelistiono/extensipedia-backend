@@ -4,8 +4,15 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from about.models import AboutSection, HeroSection
-from academic.models import CountdownEvent, QuickDownloadItem, RepositoryMaterial, YouTubeSection
+from academic.models import (
+    AcademicDigitalResourceConfiguration,
+    CountdownEvent,
+    QuickDownloadItem,
+    RepositoryMaterial,
+    YouTubeSection,
+)
 from analytics_dashboard.models import VisitorDailyVisit
+from advocacy.models import AdvocacyPolicyResourceConfiguration
 from aspirations.models import AspirationSubmission
 from aspirations.services import create_activity_log
 from career.models import CareerResourceConfiguration
@@ -31,6 +38,7 @@ class Command(BaseCommand):
         self.seed_academic()
         self.seed_competency()
         self.seed_career()
+        self.seed_advocacy()
         self.seed_aspirations()
         self.seed_visitors()
         self.stdout.write(self.style.SUCCESS("Demo data seeded successfully."))
@@ -113,6 +121,14 @@ class Command(BaseCommand):
             },
         )
 
+        AcademicDigitalResourceConfiguration.objects.update_or_create(
+            canva_pro_ekstensi="https://example.com/canva-pro-ekstensi",
+            defaults={
+                "gemini_advanced": "https://example.com/gemini-advanced",
+                "is_active": True,
+            },
+        )
+
     def seed_competency(self):
         agenda_items = [
             {
@@ -161,6 +177,16 @@ class Command(BaseCommand):
                 "portfolio_guide": "https://example.com/portfolio-guide",
                 "salary_script": "https://example.com/salary-script",
                 "case_study_interview_prep": "https://example.com/case-study-interview",
+                "is_active": True,
+            },
+        )
+
+    def seed_advocacy(self):
+        AdvocacyPolicyResourceConfiguration.objects.update_or_create(
+            siak_war="https://example.com/siak-war",
+            defaults={
+                "cicilan_ukt": "https://example.com/cicilan-ukt",
+                "alur_skpi": "https://example.com/alur-skpi",
                 "is_active": True,
             },
         )

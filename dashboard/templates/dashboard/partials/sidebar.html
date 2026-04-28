@@ -30,7 +30,7 @@
                 {% endif %}
             </div>
         {% endif %}
-        {% if 'aspirations' in allowed_dashboard_sections or 'tickets' in allowed_dashboard_sections %}
+        {% if 'aspirations' in allowed_dashboard_sections or 'tickets' in allowed_dashboard_sections or 'advocacy_resources' in allowed_dashboard_sections %}
             <div class="sidebar-group {% if sidebar_section == 'advocacy' %}open{% endif %}">
                 <div class="sidebar-group-title">Advokasi</div>
                 {% if 'aspirations' in allowed_dashboard_sections %}
@@ -38,6 +38,9 @@
                 {% endif %}
                 {% if 'tickets' in allowed_dashboard_sections %}
                     <a class="sidebar-sublink {% if sidebar_subsection == 'tickets' %}active{% endif %}" href="{% url 'dashboard:ticket-tracking' %}">Lacak Tiket</a>
+                {% endif %}
+                {% if 'advocacy_resources' in allowed_dashboard_sections %}
+                    <a class="sidebar-sublink {% if sidebar_subsection == 'advocacy_resources' %}active{% endif %}" href="{% url 'dashboard:advocacy-resources' %}">Advokasi &amp; Literasi Kebijakan</a>
                 {% endif %}
             </div>
         {% endif %}

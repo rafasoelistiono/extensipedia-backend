@@ -12,6 +12,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from accounts.models import User
+from competency.constants import DEFAULT_LOMBA_CARI_TIM_LINK
 from dashboard.forms import AgendaCardForm
 
 from competency.models import AgendaCard, CompetencyWinnerSlide
@@ -69,6 +70,22 @@ class AgendaCardModelTests(TestCase):
         with self.assertRaises(ValidationError):
             agenda.full_clean()
 
+    def test_lomba_defaults_team_finding_link_when_empty(self):
+        agenda = AgendaCard.objects.create(
+            title="Agenda Lomba",
+            short_description=build_short_description("Agenda lomba"),
+            urgency_tag=True,
+            recommendation_tag=False,
+            category_tag=AgendaCard.CategoryTag.LOMBA,
+            scope_tag=AgendaCard.ScopeTag.NASIONAL,
+            pricing_tag=AgendaCard.PricingTag.BERBAYAR,
+            deadline_date=timezone.localdate() + timedelta(days=14),
+            registration_link="https://example.com/register",
+            team_finding_link="",
+        )
+
+        self.assertEqual(agenda.team_finding_link, DEFAULT_LOMBA_CARI_TIM_LINK)
+
 
 class AgendaCardFormTests(TestCase):
     def test_boolean_fields_use_radio_inputs(self):
@@ -76,7 +93,28 @@ class AgendaCardFormTests(TestCase):
 
         self.assertIsInstance(form.fields["urgency_tag"].widget, forms.RadioSelect)
         self.assertIsInstance(form.fields["recommendation_tag"].widget, forms.RadioSelect)
-        self.assertEqual(form.fields["urgency_tag"].choices, [(True, "True"), (False, "False")])
+        self.assertEqual(form.fields["urgency_tag"].choices, [(True, "Ya"), (False, "Tidak")])
+
+    def test_lomba_form_uses_default_team_finding_link_when_empty(self):
+        form = AgendaCardForm(
+            data={
+                "title": "Lomba Studi Kasus",
+                "short_description": build_short_description("Lomba studi kasus"),
+                "urgency_tag": "True",
+                "recommendation_tag": "False",
+                "category_tag": AgendaCard.CategoryTag.LOMBA,
+                "scope_tag": AgendaCard.ScopeTag.NASIONAL,
+                "pricing_tag": AgendaCard.PricingTag.TIDAK_BERBAYAR,
+                "deadline_date": str(timezone.localdate() + timedelta(days=7)),
+                "registration_link": "https://example.com/register",
+                "team_finding_link": "",
+                "google_calendar_link": "",
+                "is_active": "on",
+            }
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["team_finding_link"], DEFAULT_LOMBA_CARI_TIM_LINK)
 
 
 class AgendaCardPublicApiTests(APITestCase):
@@ -117,6 +155,7 @@ class AgendaCardPublicApiTests(APITestCase):
         payload = unwrap_response_data(response)
         self.assertEqual(payload[0]["title"], "Newer Agenda")
         self.assertTrue(all(item["urgency_tag"] is True for item in payload))
+        self.assertIn("team_finding_link", payload[0])
 
 
 class CompetencyWinnerSlideModelTests(TestCase):

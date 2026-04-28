@@ -1,6 +1,13 @@
 from rest_framework import serializers
 
-from academic.models import AcademicService, CountdownEvent, QuickDownloadItem, RepositoryMaterial, YouTubeSection
+from academic.models import (
+    AcademicDigitalResourceConfiguration,
+    AcademicService,
+    CountdownEvent,
+    QuickDownloadItem,
+    RepositoryMaterial,
+    YouTubeSection,
+)
 from core.serializers import BaseModelSerializer
 from core.validators import validate_google_drive_url, validate_iframe_or_embed_input
 
@@ -140,4 +147,18 @@ class CountdownEventPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = CountdownEvent
         fields = ("id", "title", "target_datetime", "display_order")
+        read_only_fields = fields
+
+
+class AcademicDigitalResourceConfigurationSerializer(BaseModelSerializer):
+    class Meta:
+        model = AcademicDigitalResourceConfiguration
+        fields = "__all__"
+        read_only_fields = BaseModelSerializer.Meta.read_only_fields
+
+
+class AcademicDigitalResourcePayloadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AcademicDigitalResourceConfiguration
+        fields = ("id", "canva_pro_ekstensi", "gemini_advanced")
         read_only_fields = fields

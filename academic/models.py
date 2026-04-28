@@ -133,3 +133,21 @@ class CountdownEvent(BaseModel):
 
     def __str__(self):
         return self.title
+
+
+class AcademicDigitalResourceConfiguration(SingleActiveConfigurationMixin, BaseModel):
+    canva_pro_ekstensi = models.URLField("Canva Pro Ekstensi")
+    gemini_advanced = models.URLField("Gemini Advanced")
+
+    class Meta:
+        ordering = ["-updated_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["is_active"],
+                condition=Q(is_active=True),
+                name="unique_active_academic_digital_resource_configuration",
+            )
+        ]
+
+    def __str__(self):
+        return "Penunjang Digital Resource Links"

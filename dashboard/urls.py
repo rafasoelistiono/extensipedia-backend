@@ -10,6 +10,7 @@ from dashboard.views import (
     AspirationDetailView,
     AspirationFeatureToggleView,
     AspirationListView,
+    AdvocacyResourceLinksView,
     CabinetCalendarCreateView,
     CabinetCalendarDeleteView,
     CabinetCalendarUpdateView,
@@ -83,6 +84,7 @@ urlpatterns = [
     path("kompetensi-karir/kompetensi/<uuid:pk>/hapus/", AgendaCardDeleteView.as_view(), name="agenda-card-delete"),
     path("kompetensi-karir/karir/", CareerSettingsView.as_view(), name="career"),
     path("advokasi/aspirasi/", AspirationListView.as_view(), name="aspiration-list"),
+    path("advokasi/resource-links/", AdvocacyResourceLinksView.as_view(), name="advocacy-resources"),
     path("advokasi/aspirasi/<uuid:pk>/", AspirationDetailView.as_view(), name="aspiration-detail"),
     path("advokasi/aspirasi/<uuid:pk>/hapus/", AspirationDeleteView.as_view(), name="aspiration-delete"),
     path(

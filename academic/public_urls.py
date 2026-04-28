@@ -2,6 +2,7 @@ from django.urls import path
 from rest_framework.routers import SimpleRouter
 
 from academic.views import (
+    PublicAcademicDigitalResourcesView,
     PublicAcademicServiceViewSet,
     PublicCountdownEventViewSet,
     PublicQuickDownloadViewSet,
@@ -15,6 +16,7 @@ router.register("quick-downloads", PublicQuickDownloadViewSet, basename="public-
 router.register("countdown-events", PublicCountdownEventViewSet, basename="public-countdown-events")
 
 urlpatterns = [
+    path("digital-resources/", PublicAcademicDigitalResourcesView.as_view(), name="public-digital-resources"),
     path("repository/", PublicRepositoryView.as_view(), name="public-repository"),
     path("youtube/", PublicYouTubeSectionView.as_view(), name="public-youtube"),
 ]

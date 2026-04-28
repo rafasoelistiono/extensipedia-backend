@@ -1,7 +1,15 @@
 from django.contrib import admin
 
-from academic.models import AcademicService, CountdownEvent, QuickDownloadItem, RepositoryMaterial, YouTubeSection
+from academic.models import (
+    AcademicDigitalResourceConfiguration,
+    AcademicService,
+    CountdownEvent,
+    QuickDownloadItem,
+    RepositoryMaterial,
+    YouTubeSection,
+)
 
+admin.site.register(AcademicDigitalResourceConfiguration)
 admin.site.register(AcademicService)
 admin.site.register(QuickDownloadItem)
 admin.site.register(RepositoryMaterial)

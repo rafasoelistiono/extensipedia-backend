@@ -10,8 +10,9 @@ from django.views import View
 from django.views.generic import CreateView, DeleteView, FormView, ListView, TemplateView, UpdateView
 
 from about.models import CabinetCalendar
-from academic.models import CountdownEvent, QuickDownloadItem, RepositoryMaterial, YouTubeSection
+from academic.models import AcademicDigitalResourceConfiguration, CountdownEvent, QuickDownloadItem, RepositoryMaterial, YouTubeSection
 from analytics_dashboard.services import build_dashboard_summary, build_recent_ticket_log
+from advocacy.models import AdvocacyPolicyResourceConfiguration
 from aspirations.models import AspirationSubmission
 from aspirations.services import set_featured_state, update_aspiration_submission
 from career.models import CareerResourceConfiguration
@@ -22,8 +23,10 @@ from competency.services import (
     get_winner_slide_slot_instance,
 )
 from dashboard.forms import (
+    AcademicDigitalResourceConfigurationForm,
     AgendaCardForm,
     AspirationUpdateForm,
+    AdvocacyPolicyResourceConfigurationForm,
     CabinetCalendarForm,
     CareerResourceConfigurationForm,
     CompetencyWinnerSlideForm,
@@ -136,6 +139,11 @@ class DashboardHomeView(DashboardPageMixin, TemplateView):
             {"title": "Karir", "url": reverse("dashboard:career"), "description": "Kelola resource link karir."},
             {"title": "Aspirasi", "url": reverse("dashboard:aspiration-list"), "description": "Moderasi aspirasi dan featured items."},
             {"title": "Lacak Tiket", "url": reverse("dashboard:ticket-tracking"), "description": "Cari tiket dan monitor progres."},
+            {
+                "title": "Advokasi & Literasi Kebijakan",
+                "url": reverse("dashboard:advocacy-resources"),
+                "description": "Kelola resource link advokasi dan kebijakan.",
+            },
             {"title": "Profile", "url": reverse("dashboard:profile"), "description": "Ganti username dashboard dan password akun Anda."},
         ]
         section_lookup = {
@@ -145,6 +153,7 @@ class DashboardHomeView(DashboardPageMixin, TemplateView):
             "Karir": "career",
             "Aspirasi": "aspirations",
             "Lacak Tiket": "tickets",
+            "Advokasi & Literasi Kebijakan": "advocacy_resources",
             "Profile": "profile",
         }
         context["quick_links"] = [
@@ -301,7 +310,10 @@ class CabinetCalendarDeleteView(DashboardDeleteView):
 class AcademicOverviewView(DashboardPageMixin, TemplateView):
     template_name = "dashboard/academic_page.html"
     page_title = "Akademik"
-    page_description = "Kelola quick download, repository bahan kuliah, YouTube section, dan event countdown."
+    page_description = (
+        "Kelola quick download, repository bahan kuliah, penunjang digital resource links, YouTube section, "
+        "dan event countdown."
+    )
     sidebar_section = "academic"
 
     def get_breadcrumbs(self):
@@ -313,9 +325,16 @@ class AcademicOverviewView(DashboardPageMixin, TemplateView):
     def get_youtube_form(self):
         return YouTubeSectionForm(instance=self.get_youtube_instance())
 
+    def get_digital_resource_instance(self):
+        return get_singleton_instance(AcademicDigitalResourceConfiguration, defaults={"is_active": True})
+
+    def get_digital_resource_form(self):
+        return AcademicDigitalResourceConfigurationForm(instance=self.get_digital_resource_instance())
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.setdefault("youtube_form", self.get_youtube_form())
+        context.setdefault("digital_resource_form", self.get_digital_resource_form())
         context["quick_downloads"] = QuickDownloadItem.objects.all()
         context["repository_akuntansi_slots"] = build_repository_slots(RepositoryMaterial.Sections.AKUNTANSI)
         context["repository_manajemen_slots"] = build_repository_slots(RepositoryMaterial.Sections.MANAJEMEN)
@@ -323,6 +342,19 @@ class AcademicOverviewView(DashboardPageMixin, TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
+        if request.POST.get("form_type") == "digital_resources":
+            instance = self.get_digital_resource_instance()
+            form = AcademicDigitalResourceConfigurationForm(request.POST, instance=instance)
+            if form.is_valid():
+                configuration = form.save(commit=False)
+                configuration.is_active = True
+                apply_audit_fields(configuration, request.user)
+                configuration.save()
+                messages.success(request, "Penunjang Digital Resource Links berhasil diperbarui.")
+                return redirect("dashboard:academic")
+            messages.error(request, "Periksa kembali form Penunjang Digital Resource Links.")
+            return self.render_to_response(self.get_context_data(digital_resource_form=form))
+
         instance = self.get_youtube_instance()
         form = YouTubeSectionForm(request.POST, instance=instance)
         if form.is_valid():
@@ -677,6 +709,41 @@ class CareerSettingsView(DashboardPageMixin, TemplateView):
             messages.success(request, "Resource karir berhasil diperbarui.")
             return redirect("dashboard:career")
         messages.error(request, "Periksa kembali form resource karir.")
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+class AdvocacyResourceLinksView(DashboardPageMixin, TemplateView):
+    template_name = "dashboard/advocacy_resources_page.html"
+    page_title = "Advokasi & Literasi Kebijakan"
+    page_description = "Kelola resource links tetap untuk advokasi dan literasi kebijakan."
+    sidebar_section = "advocacy"
+    sidebar_subsection = "advocacy_resources"
+
+    def get_breadcrumbs(self):
+        return [("Advokasi", None), ("Advokasi & Literasi Kebijakan", None)]
+
+    def get_instance(self):
+        return get_singleton_instance(AdvocacyPolicyResourceConfiguration, defaults={"is_active": True})
+
+    def get_form(self):
+        return AdvocacyPolicyResourceConfigurationForm(instance=self.get_instance())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.setdefault("form", self.get_form())
+        return context
+
+    def post(self, request, *args, **kwargs):
+        instance = self.get_instance()
+        form = AdvocacyPolicyResourceConfigurationForm(request.POST, instance=instance)
+        if form.is_valid():
+            configuration = form.save(commit=False)
+            configuration.is_active = True
+            apply_audit_fields(configuration, request.user)
+            configuration.save()
+            messages.success(request, "Resource advokasi dan literasi kebijakan berhasil diperbarui.")
+            return redirect("dashboard:advocacy-resources")
+        messages.error(request, "Periksa kembali form resource advokasi dan literasi kebijakan.")
         return self.render_to_response(self.get_context_data(form=form))
 
 

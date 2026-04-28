@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 
 from accounts.permissions import IsAdminPanelUser
 from academic.selectors import (
+    get_admin_academic_digital_resource_configurations,
     get_admin_academic_services,
     get_admin_countdown_events,
     get_admin_quick_download_items,
@@ -13,6 +14,8 @@ from academic.selectors import (
     get_repository_materials,
 )
 from academic.serializers import (
+    AcademicDigitalResourceConfigurationSerializer,
+    AcademicDigitalResourcePayloadSerializer,
     AcademicServiceSerializer,
     CountdownEventSerializer,
     CountdownEventPublicSerializer,
@@ -25,7 +28,11 @@ from academic.serializers import (
     YouTubeSectionAdminSerializer,
     YouTubeSectionPublicSerializer,
 )
-from academic.services import build_repository_grouped_payload, get_active_youtube_section_or_404
+from academic.services import (
+    build_repository_grouped_payload,
+    get_active_academic_digital_resources_or_404,
+    get_active_youtube_section_or_404,
+)
 from core.mixins import AdminCrudEndpointMixin, PublicReadOnlyEndpointMixin
 from core.responses import success_response
 
@@ -80,6 +87,16 @@ class PublicCountdownEventViewSet(PublicReadOnlyEndpointMixin):
 
     def get_queryset(self):
         return get_public_countdown_events()
+
+
+class PublicAcademicDigitalResourcesView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = AcademicDigitalResourcePayloadSerializer
+
+    def get(self, request):
+        configuration = get_active_academic_digital_resources_or_404()
+        serializer = AcademicDigitalResourcePayloadSerializer(configuration, context={"request": request})
+        return success_response(serializer.data, message="Academic digital resources retrieved successfully")
 
 
 class AdminAcademicServiceViewSet(AdminCrudEndpointMixin):
@@ -140,3 +157,14 @@ class AdminCountdownEventViewSet(AdminCrudEndpointMixin):
 
     def get_queryset(self):
         return get_admin_countdown_events()
+
+
+class AdminAcademicDigitalResourceConfigurationViewSet(AdminCrudEndpointMixin):
+    serializer_class = AcademicDigitalResourceConfigurationSerializer
+    permission_classes = [IsAdminPanelUser]
+    filterset_fields = ("is_active",)
+    ordering_fields = ("updated_at", "created_at")
+    ordering = ("-updated_at",)
+
+    def get_queryset(self):
+        return get_admin_academic_digital_resource_configurations()

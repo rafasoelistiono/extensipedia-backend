@@ -313,6 +313,7 @@ Public API tidak membutuhkan login.
 | Academic | GET | `/api/v1/public/academic/youtube/` | Object | - |
 | Academic | GET | `/api/v1/public/academic/countdown-events/` | `Paginated<T>` | `page`, `page_size`, `search`, `ordering` |
 | Academic | GET | `/api/v1/public/academic/countdown-events/{id}/` | Object | - |
+| Academic | GET | `/api/v1/public/academic/digital-resources/` | Object | - |
 | Competency | GET | `/api/v1/public/competency/programs/` | `Paginated<T>` | `page`, `page_size`, `search`, `ordering` |
 | Competency | GET | `/api/v1/public/competency/programs/{id}/` | Object | - |
 | Competency | GET | `/api/v1/public/competency/agenda-cards/` | `Paginated<T>` | `page`, `page_size`, filters, `search`, `ordering` |
@@ -324,6 +325,7 @@ Public API tidak membutuhkan login.
 | Career | GET | `/api/v1/public/career/opportunities/{id}/` | Object | - |
 | Advocacy | GET | `/api/v1/public/advocacy/campaigns/` | `Paginated<T>` | `page`, `page_size`, `search`, `ordering` |
 | Advocacy | GET | `/api/v1/public/advocacy/campaigns/{id}/` | Object | - |
+| Advocacy | GET | `/api/v1/public/advocacy/policy-resources/` | Object | - |
 | Aspirations | POST | `/api/v1/public/aspirations/submit/` | Object | `multipart/form-data` |
 | Aspirations | GET | `/api/v1/public/aspirations/featured/` | Array | `visibility` |
 | Aspirations | POST | `/api/v1/public/aspirations/{id}/upvote/` | Object | - |
@@ -479,7 +481,7 @@ id, title, slug, description, poster, starts_at, ends_at
 ```txt
 id, title, short_description, urgency_tag, recommendation_tag,
 category_tag, scope_tag, pricing_tag, deadline_date,
-registration_link, google_calendar_link, countdown_days
+registration_link, team_finding_link, google_calendar_link, countdown_days
 ```
 
 Catatan:
@@ -684,6 +686,8 @@ Gunakan Swagger/ReDoc untuk melihat required field lengkap saat membuat form adm
 | Academic | GET/PUT/PATCH/DELETE | `/api/v1/admin/academic/youtube-sections/{id}/` | CRUD YouTube section |
 | Academic | GET/POST | `/api/v1/admin/academic/countdown-events/` | CRUD countdown event |
 | Academic | GET/PUT/PATCH/DELETE | `/api/v1/admin/academic/countdown-events/{id}/` | CRUD countdown event |
+| Academic | GET/POST | `/api/v1/admin/academic/digital-resources/` | CRUD digital resource config |
+| Academic | GET/PUT/PATCH/DELETE | `/api/v1/admin/academic/digital-resources/{id}/` | CRUD digital resource config |
 | Competency | GET/POST | `/api/v1/admin/competency/programs/` | CRUD program |
 | Competency | GET/PUT/PATCH/DELETE | `/api/v1/admin/competency/programs/{id}/` | CRUD program |
 | Competency | GET/POST | `/api/v1/admin/competency/agenda-cards/` | CRUD agenda card |
@@ -696,6 +700,8 @@ Gunakan Swagger/ReDoc untuk melihat required field lengkap saat membuat form adm
 | Career | GET/PUT/PATCH/DELETE | `/api/v1/admin/career/resources/{id}/` | CRUD resource config |
 | Advocacy | GET/POST | `/api/v1/admin/advocacy/campaigns/` | CRUD campaign |
 | Advocacy | GET/PUT/PATCH/DELETE | `/api/v1/admin/advocacy/campaigns/{id}/` | CRUD campaign |
+| Advocacy | GET/POST | `/api/v1/admin/advocacy/policy-resources/` | CRUD policy resource config |
+| Advocacy | GET/PUT/PATCH/DELETE | `/api/v1/admin/advocacy/policy-resources/{id}/` | CRUD policy resource config |
 | Aspirations | GET/POST | `/api/v1/admin/aspirations/submissions/` | List/create submission |
 | Aspirations | GET/PATCH | `/api/v1/admin/aspirations/submissions/{id}/` | Detail/update submission |
 | Aspirations | POST | `/api/v1/admin/aspirations/submissions/{id}/set-featured/` | Mark featured |
@@ -714,12 +720,14 @@ Gunakan Swagger/ReDoc untuk melihat required field lengkap saat membuat form adm
 | `/academic/repository-materials/` | `section` | `title`, `google_drive_link` | `section`, `display_order`, `title`, `created_at` |
 | `/academic/youtube-sections/` | `is_active` | `title`, `description` | `updated_at`, `created_at`, `title` |
 | `/academic/countdown-events/` | `is_active` | `title` | `display_order`, `target_datetime`, `created_at`, `updated_at` |
+| `/academic/digital-resources/` | `is_active` | - | `updated_at`, `created_at` |
 | `/competency/programs/` | `is_published` | `title`, `description`, `slug` | `title`, `starts_at`, `ends_at`, `created_at`, `updated_at` |
 | `/competency/agenda-cards/` | `is_active`, `urgency_tag`, `recommendation_tag`, `category_tag`, `scope_tag`, `pricing_tag` | `title`, `short_description`, `category_tag`, `scope_tag`, `pricing_tag` | `deadline_date`, `created_at`, `updated_at`, `title` |
 | `/competency/winner-slides/` | `display_order` | `alt_text` | `display_order`, `created_at`, `updated_at` |
 | `/career/opportunities/` | `is_published` | `title`, `organization`, `description` | `title`, `organization`, `closes_at`, `created_at`, `updated_at` |
 | `/career/resources/` | `is_active` | - | `updated_at`, `created_at` |
 | `/advocacy/campaigns/` | `is_published` | `title`, `summary`, `content`, `slug` | `title`, `created_at`, `updated_at` |
+| `/advocacy/policy-resources/` | `is_active` | - | `updated_at`, `created_at` |
 | `/aspirations/submissions/` | `status`, `visibility`, `is_featured` | `ticket_id`, `title`, `full_name`, `email`, `npm` | `created_at`, `updated_at`, `status`, `ticket_id`, `is_featured` |
 
 ### Dashboard payload
@@ -987,4 +995,4 @@ Security:
 - Prefix `/api/v1/public/accounts/` ada di routing, tetapi belum memiliki endpoint aktif.
 - `AboutSection` punya endpoint public `/api/v1/public/about/tentang-kami/`, tetapi belum ada Admin API khusus.
 - Dashboard HTML `/admin/` belum mencakup seluruh resource yang tersedia di Admin API.
-- Beberapa endpoint custom tidak dipaginasi: repository, YouTube singleton, career resources, featured aspirations, ticket tracking, dashboard summary, dan ticket log.
+- Beberapa endpoint custom tidak dipaginasi: repository, YouTube singleton, digital resources, career resources, advocacy policy resources, featured aspirations, ticket tracking, dashboard summary, dan ticket log.
