@@ -46,9 +46,22 @@ Admin API : /api/v1/admin/
 | ReDoc | `/api/schema/redoc/` |
 | Raw OpenAPI schema | `/api/schema/` |
 
+### Ringkasan perbaruan backend saat ini
+
+Perubahan dan capability penting yang perlu diketahui konsumen API:
+
+- Public API sekarang sudah dibagi rapi per domain konten: `about`, `academic`, `competency`, `career`, `advocacy`, `aspirations`, `tickets`, dan `analytics-dashboard`.
+- Admin API sudah mencakup CRUD untuk hampir semua resource utama, plus auth JWT, profile admin saat ini, dashboard summary, dan ticket activity log.
+- Beberapa resource public sekarang berbentuk singleton aktif, bukan list: hero, tentang-kami, cabinet calendar, academic YouTube, academic digital resources, career resources, dan advocacy policy resources.
+- Fitur aspirasi publik sekarang lengkap end-to-end: submit, featured list, upvote, vote, dan tracking ticket.
+- Winner slide kompetensi memakai slot tetap `1..5` di sisi admin; public hanya menerima slot yang sudah punya gambar.
+- Public analytics endpoint sengaja tidak membuka angka analytics; ringkasan analytics penuh hanya tersedia di admin.
+- API root `/api/v1/` sekarang mengembalikan metadata dasar API: `name`, `version`, `public_base_url`, dan `admin_base_url`.
+
 ### Aturan konsumsi paling penting
 
-- Gunakan trailing slash untuk semua endpoint, misalnya `/api/v1/public/about/hero/`.
+- Gunakan trailing slash untuk endpoint canonical, misalnya `/api/v1/public/about/hero/`.
+- Khusus aspirasi publik, backend masih menyediakan compatibility route tanpa trailing slash untuk `submit`, `upvote`, dan `vote`, tetapi client baru tetap sebaiknya memakai URL canonical yang memakai slash.
 - Semua response JSON dibungkus dengan `success`, `message`, dan `data`.
 - Endpoint list standar mengembalikan `data.items` dan `data.pagination`.
 - Endpoint singleton/detail mengembalikan object langsung di `data`.
@@ -57,6 +70,7 @@ Admin API : /api/v1/admin/
 - Public API tidak butuh token.
 - Admin API butuh `Authorization: Bearer <access_token>`, kecuali login dan refresh.
 - Untuk upload file, gunakan `multipart/form-data`.
+- Field file/image public akan berupa URL media atau `null`; saat request normal melalui HTTP URL ini dapat langsung dipakai frontend.
 
 ## 2. Response Contract
 
@@ -333,6 +347,13 @@ Public API tidak membutuhkan login.
 | Tickets | GET | `/api/v1/public/tickets/track/` | Object | `ticket_id` |
 | Analytics | GET | `/api/v1/public/analytics-dashboard/` | Object | - |
 
+### Catatan struktur public API
+
+- Prefix `/api/v1/public/accounts/` sudah disiapkan di routing, tetapi saat ini belum memiliki endpoint aktif.
+- Endpoint singleton aktif berikut akan mengembalikan `404` jika belum ada konfigurasi aktif: `/about/hero/`, `/about/tentang-kami/`, `/about/cabinet-calendar/`, `/academic/youtube/`, `/academic/digital-resources/`, `/career/resources/`, dan `/advocacy/policy-resources/`.
+- Endpoint list public hanya menampilkan record yang memang aktif/published.
+- Endpoint analytics public tidak mengembalikan angka statistik; endpoint ini hanya memberi tahu bahwa analytics penuh ada di Admin API.
+
 ### Public filters and ordering
 
 | Endpoint | Search fields | Ordering fields | Extra filters |
@@ -401,6 +422,7 @@ Catatan:
 
 - `embed_url` public berasal dari `sanitized_embed_url`.
 - `provider` bisa `google_calendar`, `youtube`, `vimeo`, `google`, atau `external`.
+- Jika frontend hanya butuh URL aman untuk iframe, prioritaskan `embed_url`; `embed_code` lebih cocok dipakai untuk kebutuhan preview/admin.
 - `AboutSection` punya endpoint public, tetapi belum punya admin API khusus.
 
 `profiles`:
@@ -490,6 +512,8 @@ Catatan:
 - `category_tag`: `workshop` atau `lomba`.
 - `scope_tag`: `nasional` atau `internasional`.
 - `pricing_tag`: `berbayar` atau `tidak berbayar`.
+- Jika `category_tag=lomba` dan `team_finding_link` dikosongkan di admin, backend akan mengisi default link cari tim.
+- Jika `category_tag` bukan `lomba`, backend akan mengosongkan `team_finding_link`.
 - Default ordering: `-created_at,-updated_at,deadline_date,title`.
 
 `winner-slides`:
@@ -550,11 +574,13 @@ evidence_attachment
 Catatan submit:
 
 - `evidence_attachment` hanya menerima image atau PDF.
+- Ukuran file maksimum `5 MB`.
 - Public client tidak bisa memilih `visibility`.
 - Record baru dibuat dengan `visibility=anonymous`.
 - Status awal adalah `submitted`.
 - `ticket_id` otomatis dibuat dengan format `ASP-XXXXXXXXXX`.
 - Email konfirmasi dikirim secara sinkron setelah data tersimpan.
+- Endpoint canonical adalah `/submit/`, tetapi backend masih menerima `/submit` untuk kompatibilitas.
 
 Response submit:
 
@@ -600,6 +626,11 @@ Upvote/vote response:
 }
 ```
 
+Catatan interaksi:
+
+- Endpoint canonical adalah `/<uuid>/upvote/` dan `/<uuid>/vote/`.
+- Backend masih menerima varian tanpa trailing slash untuk kompatibilitas lama.
+
 Tracking ticket:
 
 ```txt
@@ -628,6 +659,8 @@ Jika `ticket_id` kosong, backend mengembalikan object kosong yang aman:
 ```
 
 Tracking tidak pernah mengekspos `full_name`, `npm`, atau `email`.
+
+Jika `ticket_id` diisi tetapi formatnya tidak cocok dengan pola `ASP-XXXXXXXXXX` atau record tidak ditemukan, backend mengembalikan `404` dengan pesan `Ticket not found.`.
 
 ### Analytics public
 
@@ -981,6 +1014,7 @@ Analytics:
 - Endpoint `/api/v1/public/tickets/` tidak dihitung.
 - Deduplikasi visitor memakai cache process-local.
 - Pada deployment multi-worker, gunakan cache terpusat seperti Redis jika butuh angka visitor yang lebih stabil.
+- Endpoint public `/api/v1/public/analytics-dashboard/` bukan sumber data analytics; endpoint itu hanya mengembalikan `{ "available": false }`.
 
 Security:
 
@@ -996,3 +1030,4 @@ Security:
 - `AboutSection` punya endpoint public `/api/v1/public/about/tentang-kami/`, tetapi belum ada Admin API khusus.
 - Dashboard HTML `/admin/` belum mencakup seluruh resource yang tersedia di Admin API.
 - Beberapa endpoint custom tidak dipaginasi: repository, YouTube singleton, digital resources, career resources, advocacy policy resources, featured aspirations, ticket tracking, dashboard summary, dan ticket log.
+- Public singleton endpoint akan `404` sampai konfigurasi aktifnya tersedia, jadi frontend perlu menyiapkan fallback state kosong/loading/error.
