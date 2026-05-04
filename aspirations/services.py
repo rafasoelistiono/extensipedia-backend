@@ -1,16 +1,25 @@
+import logging
 import uuid
 
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import F
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import APIException, NotFound
 
 from aspirations.models import AspirationActivityLog, AspirationSubmission
 from aspirations.selectors import find_ticket_by_ticket_id
 
+logger = logging.getLogger(__name__)
+
 TICKET_ID_PREFIX = "ASP"
 TICKET_ID_REGEX = rf"^{TICKET_ID_PREFIX}-[A-F0-9]{{10}}$"
+
+
+class ConfirmationEmailDeliveryFailed(APIException):
+    status_code = 503
+    default_detail = "Aspiration ticket could not be submitted because the confirmation email could not be sent."
+    default_code = "confirmation_email_failed"
 
 
 def generate_ticket_id():
@@ -31,19 +40,27 @@ def create_public_aspiration_submission(**validated_data):
             actor_name=aspiration.full_name,
             metadata={"source": "public_form"},
         )
-    send_aspiration_confirmation_email(aspiration)
-    return aspiration
+        send_aspiration_confirmation_email_or_raise(aspiration)
+        return aspiration
+
+
+def send_aspiration_confirmation_email_or_raise(aspiration):
+    try:
+        send_aspiration_confirmation_email(aspiration)
+    except Exception as exc:
+        logger.exception("Failed to send aspiration confirmation email for ticket %s.", aspiration.ticket_id)
+        raise ConfirmationEmailDeliveryFailed() from exc
 
 
 def send_aspiration_confirmation_email(aspiration):
-    subject = f"Aspiration ticket {aspiration.ticket_id}"
+    subject = f"[Extensipedia] Tiket Aspirasi {aspiration.ticket_id}"
     message = (
-        f"Hello {aspiration.full_name},\n\n"
-        f"Your aspiration has been received.\n"
-        f"Ticket ID: {aspiration.ticket_id}\n"
-        f"Title: {aspiration.title}\n"
+        f"Halo {aspiration.full_name},\n\n"
+        "Aspirasi Anda berhasil diterima oleh Extensipedia.\n\n"
+        f"ID tiket: {aspiration.ticket_id}\n"
+        f"Judul: {aspiration.title}\n"
         f"Status: {aspiration.get_status_display()}\n\n"
-        "Please keep this ticket ID to track progress."
+        "Simpan ID tiket ini untuk memantau progres aspirasi Anda."
     )
     send_mail(
         subject=subject,

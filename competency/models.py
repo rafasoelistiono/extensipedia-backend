@@ -28,7 +28,7 @@ class CompetencyProgram(SlugModelMixin, BaseModel):
 
 
 class AgendaCard(BaseModel):
-    MAX_RECORDS = 15
+    MAX_RECORDS = 100
 
     class CategoryTag(models.TextChoices):
         WORKSHOP = "workshop", "Workshop"

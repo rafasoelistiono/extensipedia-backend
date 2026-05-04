@@ -283,9 +283,9 @@ Throttle yang aktif:
 
 | Scope | Rate |
 |---|---:|
-| Submit aspiration | `2/hour`, `5/day` |
-| Upvote/vote aspiration | `10/hour`, `30/day` |
-| Ticket tracking | `60/hour` |
+| Submit aspiration | `2/min`, `10/hour` |
+| Upvote/vote aspiration | `30/min`, `300/hour` |
+| Ticket tracking | `60/min` |
 | Admin login | `5/min`, `20/hour` |
 
 ## 5. Cara Membaca Endpoint List

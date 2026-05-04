@@ -42,6 +42,33 @@ class AspirationPublicFlowTests(APITestCase):
         self.assertTrue(aspiration.ticket_id.startswith("ASP-"))
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn(aspiration.ticket_id, mail.outbox[0].body)
+        payload = unwrap_response_data(response)
+        self.assertEqual(payload["ticket_id"], aspiration.ticket_id)
+
+    def test_aspiration_submission_rolls_back_when_email_fails(self):
+        url = reverse("public-aspirations:aspiration-submit")
+
+        with self.assertLogs("aspirations.services", level="ERROR") as logs:
+            with patch("aspirations.services.send_mail", side_effect=TimeoutError("SMTP timeout")):
+                response = self.client.post(
+                    url,
+                    data={
+                        "full_name": "Rina Putri",
+                        "npm": "22123456",
+                        "email": "rina@example.com",
+                        "title": "Perbaikan WiFi Gedung A",
+                        "short_description": "WiFi sering putus saat jam kuliah.",
+                    },
+                    format="json",
+                )
+
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertEqual(AspirationSubmission.objects.count(), 0)
+        self.assertEqual(response.data["success"], False)
+        self.assertIn("confirmation email could not be sent", response.data["message"])
+        self.assertNotIn("ticket_id", response.data.get("data", {}))
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertIn("Failed to send aspiration confirmation email", logs.output[0])
 
     def test_ticket_id_generation_is_unique(self):
         AspirationSubmission.objects.create(
