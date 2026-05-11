@@ -127,9 +127,12 @@ username: superadmin
 akses: dashboard, tentang kami, akademik, kompetensi, karir, aspirasi, lacak tiket, advokasi & literasi kebijakan, profile
 
 username: akademik
-akses: dashboard, tentang kami, akademik termasuk penunjang digital resource links, profile
+akses: dashboard, tentang kami, akademik termasuk penunjang digital resource links, kompetensi, profile
 
 username: kompetensi
+akses: dashboard, tentang kami, kompetensi, profile
+
+username: karir
 akses: dashboard, tentang kami, kompetensi, karir, profile
 
 username: advokasi

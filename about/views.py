@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from accounts.permissions import IsAdminPanelUser
 from about.selectors import (
     get_admin_cabinet_calendar,
+    get_admin_about_section,
     get_admin_hero_sections,
     get_admin_leadership_members,
     get_admin_organization_profiles,
@@ -13,6 +14,7 @@ from about.selectors import (
 )
 from about.serializers import (
     AdminCabinetCalendarSerializer,
+    AboutSectionSerializer,
     HeroSectionSerializer,
     LeadershipMemberSerializer,
     OrganizationProfileSerializer,
@@ -26,6 +28,7 @@ from about.services import (
     get_active_about_section_or_404,
     get_active_cabinet_calendar_or_404,
     get_active_hero_or_404,
+    get_or_build_about_section,
     get_or_build_cabinet_calendar,
 )
 from core.mixins import AdminCrudEndpointMixin, PublicReadOnlyEndpointMixin
@@ -144,3 +147,32 @@ class AdminCabinetCalendarView(APIView):
             save_kwargs["created_by"] = request.user
         serializer.save(**save_kwargs)
         return success_response(serializer.data, message="Cabinet calendar updated successfully")
+
+
+class AdminAboutSectionView(APIView):
+    permission_classes = [IsAdminPanelUser]
+    serializer_class = AboutSectionSerializer
+
+    def get_object(self):
+        return get_admin_about_section() or get_or_build_about_section()
+
+    def get(self, request):
+        instance = self.get_object()
+        serializer = AboutSectionSerializer(instance, context={"request": request})
+        return success_response(serializer.data, message="About section retrieved successfully")
+
+    def put(self, request):
+        return self._save(request, partial=False)
+
+    def patch(self, request):
+        return self._save(request, partial=True)
+
+    def _save(self, request, partial):
+        instance = get_admin_about_section()
+        serializer = AboutSectionSerializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        save_kwargs = {"is_active": True, "updated_by": request.user}
+        if instance is None:
+            save_kwargs["created_by"] = request.user
+        serializer.save(**save_kwargs)
+        return success_response(serializer.data, message="About section updated successfully")

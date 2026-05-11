@@ -22,8 +22,8 @@ class CareerOpportunity(BaseModel):
 class CareerResourceConfiguration(SingleActiveConfigurationMixin, BaseModel):
     cv_templates = models.URLField()
     cover_letter = models.URLField()
-    portfolio_guide = models.URLField()
-    salary_script = models.URLField()
+    portfolio_guide = models.URLField("Job interview prep")
+    salary_script = models.URLField("Compensation & benefit research")
     case_study_interview_prep = models.URLField()
 
     class Meta:

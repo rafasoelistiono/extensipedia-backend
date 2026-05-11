@@ -9,6 +9,47 @@ from core.validators import (
     validate_iframe_or_embed_input,
 )
 
+
+ABOUT_PROGRAM_LINK_GROUPS = (
+    (
+        "akademik_teknologi",
+        "Akademik & Teknologi",
+        (
+            ("extensipedia_link", "Extensipedia"),
+            ("study_boost_exam_blast_link", "Study Boost & Exam Blast"),
+            ("fun_enlightenment_link", "Fun Enlightenment"),
+        ),
+    ),
+    (
+        "karir_bisnis_relasi",
+        "Karir, Bisnis & Relasi",
+        (
+            ("career_catalyst_link", "Career Catalyst"),
+            ("explore_link", "EXPLORE"),
+            ("business_partnership_link", "Business Partnership"),
+        ),
+    ),
+    (
+        "advokasi_isu_strategis",
+        "Advokasi & Isu Strategis",
+        (
+            ("jaring_aspirasi_link", "Jaring Aspirasi"),
+            ("kajian_strategis_link", "Kajian Strategis"),
+            ("bincang_sekma_link", "Bincang Sekma"),
+        ),
+    ),
+    (
+        "komunitas_pengabdian",
+        "Komunitas & Pengabdian",
+        (
+            ("reach_project_link", "REACH Project"),
+            ("talent_interest_link", "Talent Interest"),
+            ("branding_dokumentasi_link", "Branding & Dokumentasi"),
+        ),
+    ),
+)
+
+
 class OrganizationProfile(BaseModel):
     name = models.CharField(max_length=255)
     tagline = models.CharField(max_length=255, blank=True)
@@ -92,6 +133,18 @@ class AboutSection(SingleActiveConfigurationMixin, BaseModel):
         null=True,
         validators=[validate_file_size],
     )
+    extensipedia_link = models.URLField("Extensipedia", blank=True)
+    study_boost_exam_blast_link = models.URLField("Study Boost & Exam Blast", blank=True)
+    fun_enlightenment_link = models.URLField("Fun Enlightenment", blank=True)
+    career_catalyst_link = models.URLField("Career Catalyst", blank=True)
+    explore_link = models.URLField("EXPLORE", blank=True)
+    business_partnership_link = models.URLField("Business Partnership", blank=True)
+    jaring_aspirasi_link = models.URLField("Jaring Aspirasi", blank=True)
+    kajian_strategis_link = models.URLField("Kajian Strategis", blank=True)
+    bincang_sekma_link = models.URLField("Bincang Sekma", blank=True)
+    reach_project_link = models.URLField("REACH Project", blank=True)
+    talent_interest_link = models.URLField("Talent Interest", blank=True)
+    branding_dokumentasi_link = models.URLField("Branding & Dokumentasi", blank=True)
 
     class Meta:
         ordering = ["-updated_at"]

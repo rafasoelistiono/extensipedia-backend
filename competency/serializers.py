@@ -38,6 +38,7 @@ class AgendaCardAdminSerializer(BaseModelSerializer):
 
 class AgendaCardPublicSerializer(serializers.ModelSerializer):
     countdown_days = serializers.SerializerMethodField()
+    header_image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = AgendaCard
@@ -45,6 +46,7 @@ class AgendaCardPublicSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "short_description",
+            "header_image_url",
             "urgency_tag",
             "recommendation_tag",
             "category_tag",
@@ -57,6 +59,15 @@ class AgendaCardPublicSerializer(serializers.ModelSerializer):
             "countdown_days",
         )
         read_only_fields = fields
+
+    def get_header_image_url(self, obj) -> str | None:
+        if not obj.header_image:
+            return None
+        request = self.context.get("request")
+        url = obj.header_image.url
+        if request is not None:
+            return request.build_absolute_uri(url)
+        return url
 
     def get_countdown_days(self, obj) -> int:
         return (obj.deadline_date - timezone.localdate()).days

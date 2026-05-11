@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
-from about.models import CabinetCalendar
+from about.models import ABOUT_PROGRAM_LINK_GROUPS, AboutSection, CabinetCalendar
 from academic.models import (
     AcademicDigitalResourceConfiguration,
     CountdownEvent,
@@ -87,6 +87,36 @@ class CabinetCalendarForm(DashboardModelForm):
             "description": forms.Textarea(attrs={"rows": 3}),
             "embed_code": forms.Textarea(attrs={"rows": 4}),
         }
+
+
+class AboutSectionForm(DashboardModelForm):
+    class Meta:
+        model = AboutSection
+        fields = (
+            "extensipedia_link",
+            "study_boost_exam_blast_link",
+            "fun_enlightenment_link",
+            "career_catalyst_link",
+            "explore_link",
+            "business_partnership_link",
+            "jaring_aspirasi_link",
+            "kajian_strategis_link",
+            "bincang_sekma_link",
+            "reach_project_link",
+            "talent_interest_link",
+            "branding_dokumentasi_link",
+        )
+
+    @property
+    def program_link_groups(self):
+        return [
+            {
+                "key": group_key,
+                "label": group_label,
+                "fields": [self[field_name] for field_name, _ in items],
+            }
+            for group_key, group_label, items in ABOUT_PROGRAM_LINK_GROUPS
+        ]
 
 
 class QuickDownloadForm(DashboardModelForm):
@@ -190,6 +220,7 @@ class AgendaCardForm(DashboardModelForm):
         fields = (
             "title",
             "short_description",
+            "header_image",
             "urgency_tag",
             "recommendation_tag",
             "category_tag",
@@ -214,6 +245,7 @@ class AgendaCardForm(DashboardModelForm):
         self.default_lomba_team_finding_link = DEFAULT_LOMBA_CARI_TIM_LINK
         self.fields["title"].label = "Judul Agenda"
         self.fields["short_description"].label = "Deskripsi Singkat"
+        self.fields["header_image"].label = "Image Header"
         self.fields["urgency_tag"].label = "Urgensi"
         self.fields["recommendation_tag"].label = "Rekomendasi"
         self.fields["category_tag"].label = "Kategori"
@@ -225,6 +257,9 @@ class AgendaCardForm(DashboardModelForm):
         self.fields["google_calendar_link"].label = "Google Calendar Link"
         self.fields["is_active"].label = "Aktif"
         self.fields["short_description"].help_text = "Maksimal 300 karakter."
+        self.fields["header_image"].help_text = (
+            "Wajib format JPG / PNG / WebP dan maksimal 1 MB. Rasio, ukuran, dan orientasi di bawah hanya panduan."
+        )
         self.fields["urgency_tag"].help_text = "Tandai jika agenda perlu diprioritaskan."
         self.fields["recommendation_tag"].help_text = "Tandai jika agenda direkomendasikan."
         self.fields["registration_link"].help_text = "Isi link pendaftaran agenda."
@@ -277,6 +312,11 @@ class CareerResourceConfigurationForm(DashboardModelForm):
             "salary_script",
             "case_study_interview_prep",
         )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["portfolio_guide"].label = "Job interview prep"
+        self.fields["salary_script"].label = "Compensation & benefit research"
 
 
 class AcademicDigitalResourceConfigurationForm(DashboardModelForm):

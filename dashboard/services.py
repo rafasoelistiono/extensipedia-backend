@@ -34,6 +34,14 @@ LOCAL_DASHBOARD_USERS = (
         "is_superuser": False,
     },
     {
+        "email": "karir@extensipedia.local",
+        "dashboard_username": "karir",
+        "full_name": "Admin Karir",
+        "dashboard_access_scope": "career",
+        "is_staff": True,
+        "is_superuser": False,
+    },
+    {
         "email": "advokasi@extensipedia.local",
         "dashboard_username": "advokasi",
         "full_name": "Admin Advokasi",
@@ -42,8 +50,6 @@ LOCAL_DASHBOARD_USERS = (
         "is_superuser": False,
     },
 )
-
-LEGACY_LOCAL_DASHBOARD_USER_EMAILS = ("karir@extensipedia.local",)
 
 
 def ensure_local_development_dashboard_users():
@@ -95,13 +101,6 @@ def ensure_local_development_dashboard_users():
                 logger.info("Created local development dashboard user '%s'.", spec["dashboard_username"])
 
             created_users[spec["dashboard_username"]] = user
-
-        user_model.objects.filter(email__in=LEGACY_LOCAL_DASHBOARD_USER_EMAILS).update(
-            dashboard_access_scope="competency",
-            is_staff=False,
-            is_superuser=False,
-            is_active=False,
-        )
     except (OperationalError, ProgrammingError):
         logger.debug("Skipping local dashboard user bootstrap because the database is not ready.")
         return {}

@@ -5,6 +5,36 @@
     <div class="col-12">
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
+                <h2 class="h6 mb-3">Link Detail Program Unggulan</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="about_section">
+                    {% for error in about_form.non_field_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
+                    <div class="row g-3">
+                        {% for group in about_form.program_link_groups %}
+                            <div class="col-lg-6">
+                                <div class="border rounded-3 p-3 h-100">
+                                    <h3 class="h6 mb-3">{{ group.label }}</h3>
+                                    {% for field in group.fields %}
+                                        <div class="mb-3">
+                                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                            {{ field }}
+                                            {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button class="btn btn-dark mt-4" type="submit">Simpan Tentang Kami</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
                 <h2 class="h6 mb-3">Kalender Kabinet</h2>
                 <form method="post">
                     {% csrf_token %}

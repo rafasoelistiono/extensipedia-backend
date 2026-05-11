@@ -5,7 +5,6 @@ from django.db.models import Q
 from core.models import BaseModel, SingleActiveConfigurationMixin, SlugModelMixin, image_upload_to
 from core.validators import (
     validate_file_size,
-    validate_google_drive_url,
     validate_iframe_or_embed_input,
 )
 
@@ -71,7 +70,7 @@ class RepositoryMaterial(BaseModel):
 
     section = models.CharField(max_length=20, choices=Sections.choices)
     title = models.CharField(max_length=255)
-    google_drive_link = models.URLField(validators=[validate_google_drive_url])
+    google_drive_link = models.URLField("Link")
     display_order = models.PositiveIntegerField(default=0)
 
     class Meta:

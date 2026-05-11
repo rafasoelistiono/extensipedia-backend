@@ -9,7 +9,7 @@ from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, FormView, ListView, TemplateView, UpdateView
 
-from about.models import CabinetCalendar
+from about.models import AboutSection, CabinetCalendar
 from academic.models import AcademicDigitalResourceConfiguration, CountdownEvent, QuickDownloadItem, RepositoryMaterial, YouTubeSection
 from analytics_dashboard.services import build_dashboard_summary, build_recent_ticket_log
 from advocacy.models import AdvocacyPolicyResourceConfiguration
@@ -25,6 +25,7 @@ from competency.services import (
 from dashboard.forms import (
     AcademicDigitalResourceConfigurationForm,
     AgendaCardForm,
+    AboutSectionForm,
     AspirationUpdateForm,
     AdvocacyPolicyResourceConfigurationForm,
     CabinetCalendarForm,
@@ -194,7 +195,7 @@ class DashboardProfileView(DashboardPageMixin, FormView):
 class AboutSettingsView(DashboardPageMixin, TemplateView):
     template_name = "dashboard/about_page.html"
     page_title = "Tentang Kami"
-    page_description = "Kelola kalender kabinet."
+    page_description = "Kelola konten Tentang Kami, link detail program unggulan, dan kalender kabinet."
     sidebar_section = "about"
 
     def get_breadcrumbs(self):
@@ -203,15 +204,42 @@ class AboutSettingsView(DashboardPageMixin, TemplateView):
     def get_calendar_instance(self):
         return get_singleton_instance(CabinetCalendar, defaults={"is_active": True})
 
+    def get_about_instance(self):
+        return get_singleton_instance(
+            AboutSection,
+            defaults={
+                "title": "Tentang Kami",
+                "description": "Tentang Kami",
+                "is_active": True,
+            },
+        )
+
+    def get_about_form(self):
+        return AboutSectionForm(instance=self.get_about_instance())
+
     def get_calendar_form(self):
         return CabinetCalendarForm(instance=self.get_calendar_instance())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context.setdefault("about_form", self.get_about_form())
         context.setdefault("calendar_form", self.get_calendar_form())
         return context
 
     def post(self, request, *args, **kwargs):
+        if request.POST.get("form_type") == "about_section":
+            instance = self.get_about_instance()
+            about_form = AboutSectionForm(request.POST, instance=instance)
+            if about_form.is_valid():
+                about_section = about_form.save(commit=False)
+                about_section.is_active = True
+                apply_audit_fields(about_section, request.user)
+                about_section.save()
+                messages.success(request, "Tentang Kami dan link detail program berhasil diperbarui.")
+                return redirect("dashboard:about")
+            messages.error(request, "Periksa kembali form Tentang Kami.")
+            return self.render_to_response(self.get_context_data(about_form=about_form))
+
         instance = self.get_calendar_instance()
         calendar_form = CabinetCalendarForm(request.POST, instance=instance)
         if calendar_form.is_valid():

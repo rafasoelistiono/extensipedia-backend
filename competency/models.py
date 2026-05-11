@@ -7,6 +7,21 @@ from core.models import BaseModel, SlugModelMixin, image_upload_to
 from core.validators import validate_file_size, validate_image_extension
 
 
+AGENDA_HEADER_MAX_FILE_SIZE = 1 * 1024 * 1024
+
+
+def validate_agenda_header_image(file_obj):
+    if not file_obj:
+        return file_obj
+
+    validate_image_extension(file_obj)
+
+    if file_obj.size > AGENDA_HEADER_MAX_FILE_SIZE:
+        raise ValidationError("Ukuran file ideal: maksimal 1 MB.")
+
+    return file_obj
+
+
 class CompetencyProgram(SlugModelMixin, BaseModel):
     title = models.CharField(max_length=255)
     description = models.TextField()
@@ -44,6 +59,12 @@ class AgendaCard(BaseModel):
 
     title = models.CharField(max_length=255)
     short_description = models.TextField(validators=[MaxLengthValidator(300)])
+    header_image = models.ImageField(
+        upload_to=image_upload_to("competency/agenda-cards"),
+        blank=True,
+        null=True,
+        validators=[validate_agenda_header_image],
+    )
     urgency_tag = models.BooleanField(default=False)
     recommendation_tag = models.BooleanField(default=False)
     category_tag = models.CharField(max_length=100, choices=CategoryTag.choices)

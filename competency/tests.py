@@ -53,6 +53,16 @@ def build_test_image(name="slide.png"):
     )
 
 
+def build_agenda_header_image(name="agenda-header.png", size=(1200, 650)):
+    buffer = BytesIO()
+    Image.new("RGB", size, color=(24, 84, 120)).save(buffer, format="PNG")
+    return SimpleUploadedFile(
+        name,
+        buffer.getvalue(),
+        content_type="image/png",
+    )
+
+
 class AgendaCardModelTests(TestCase):
     def test_short_description_rejects_text_over_300_characters(self):
         agenda = AgendaCard(
@@ -86,6 +96,43 @@ class AgendaCardModelTests(TestCase):
 
         self.assertEqual(agenda.team_finding_link, DEFAULT_LOMBA_CARI_TIM_LINK)
 
+    def test_header_image_allows_small_square_image(self):
+        agenda = AgendaCard(
+            title="Agenda Dengan Gambar Kecil",
+            short_description=build_short_description("Agenda gambar kecil"),
+            header_image=build_agenda_header_image(size=(500, 500)),
+            urgency_tag=True,
+            recommendation_tag=False,
+            category_tag=AgendaCard.CategoryTag.WORKSHOP,
+            scope_tag=AgendaCard.ScopeTag.NASIONAL,
+            pricing_tag=AgendaCard.PricingTag.BERBAYAR,
+            deadline_date=timezone.localdate() + timedelta(days=7),
+            registration_link="https://example.com/register",
+        )
+
+        agenda.full_clean()
+
+    def test_header_image_rejects_file_over_one_mb(self):
+        agenda = AgendaCard(
+            title="Agenda Dengan Gambar Besar",
+            short_description=build_short_description("Agenda gambar besar"),
+            header_image=SimpleUploadedFile(
+                "large-header.png",
+                build_agenda_header_image().read() + (b"0" * ((1024 * 1024) + 1)),
+                content_type="image/png",
+            ),
+            urgency_tag=True,
+            recommendation_tag=False,
+            category_tag=AgendaCard.CategoryTag.WORKSHOP,
+            scope_tag=AgendaCard.ScopeTag.NASIONAL,
+            pricing_tag=AgendaCard.PricingTag.BERBAYAR,
+            deadline_date=timezone.localdate() + timedelta(days=7),
+            registration_link="https://example.com/register",
+        )
+
+        with self.assertRaises(ValidationError):
+            agenda.full_clean()
+
 
 class AgendaCardFormTests(TestCase):
     def test_boolean_fields_use_radio_inputs(self):
@@ -116,6 +163,27 @@ class AgendaCardFormTests(TestCase):
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data["team_finding_link"], DEFAULT_LOMBA_CARI_TIM_LINK)
 
+    def test_form_accepts_valid_header_image(self):
+        form = AgendaCardForm(
+            data={
+                "title": "Workshop Interview",
+                "short_description": build_short_description("Workshop interview"),
+                "urgency_tag": "True",
+                "recommendation_tag": "False",
+                "category_tag": AgendaCard.CategoryTag.WORKSHOP,
+                "scope_tag": AgendaCard.ScopeTag.NASIONAL,
+                "pricing_tag": AgendaCard.PricingTag.TIDAK_BERBAYAR,
+                "deadline_date": str(timezone.localdate() + timedelta(days=7)),
+                "registration_link": "https://example.com/register",
+                "team_finding_link": "",
+                "google_calendar_link": "",
+                "is_active": "on",
+            },
+            files={"header_image": build_agenda_header_image()},
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+
 
 class AgendaCardPublicApiTests(APITestCase):
     def test_public_agenda_cards_are_ordered_by_newest_first_and_support_boolean_filter(self):
@@ -134,6 +202,7 @@ class AgendaCardPublicApiTests(APITestCase):
         newer = AgendaCard.objects.create(
             title="Newer Agenda",
             short_description=build_short_description("Newer agenda"),
+            header_image=build_agenda_header_image("newer-agenda.png"),
             urgency_tag=True,
             recommendation_tag=False,
             category_tag=AgendaCard.CategoryTag.WORKSHOP,
@@ -156,6 +225,7 @@ class AgendaCardPublicApiTests(APITestCase):
         self.assertEqual(payload[0]["title"], "Newer Agenda")
         self.assertTrue(all(item["urgency_tag"] is True for item in payload))
         self.assertIn("team_finding_link", payload[0])
+        self.assertTrue(payload[0]["header_image_url"].endswith(".png"))
 
 
 class CompetencyWinnerSlideModelTests(TestCase):

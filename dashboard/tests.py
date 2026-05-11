@@ -5,7 +5,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
 
-from academic.models import AcademicDigitalResourceConfiguration
+from academic.models import AcademicDigitalResourceConfiguration, RepositoryMaterial
 from advocacy.models import AdvocacyPolicyResourceConfiguration
 from accounts.models import User
 from competency.constants import DEFAULT_LOMBA_CARI_TIM_LINK
@@ -38,14 +38,14 @@ class DashboardAccessTests(TestCase):
         self.assertEqual(self.client.get(reverse("dashboard:home")).status_code, 200)
         self.assertEqual(self.client.get(reverse("dashboard:about")).status_code, 200)
         self.assertEqual(self.client.get(reverse("dashboard:academic")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("dashboard:competency")).status_code, 200)
         self.assertEqual(self.client.get(reverse("dashboard:profile")).status_code, 200)
-        self.assertEqual(self.client.get(reverse("dashboard:competency")).status_code, 403)
         self.assertEqual(self.client.get(reverse("dashboard:career")).status_code, 403)
         self.assertEqual(self.client.get(reverse("dashboard:aspiration-list")).status_code, 403)
         self.assertEqual(self.client.get(reverse("dashboard:ticket-tracking")).status_code, 403)
         self.assertEqual(self.client.get(reverse("dashboard:advocacy-resources")).status_code, 403)
 
-    def test_competency_user_accesses_competency_and_career_sections(self):
+    def test_competency_user_accesses_competency_without_career(self):
         competency_user = self.create_dashboard_user(
             username="kompetensi",
             scope=User.DashboardAccessScopes.COMPETENCY,
@@ -55,10 +55,27 @@ class DashboardAccessTests(TestCase):
         self.assertEqual(self.client.get(reverse("dashboard:home")).status_code, 200)
         self.assertEqual(self.client.get(reverse("dashboard:about")).status_code, 200)
         self.assertEqual(self.client.get(reverse("dashboard:competency")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("dashboard:career")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("dashboard:profile")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("dashboard:academic")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("dashboard:aspiration-list")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("dashboard:advocacy-resources")).status_code, 403)
+
+    def test_career_user_only_accesses_career_content_section(self):
+        career_user = self.create_dashboard_user(
+            username="karir",
+            scope=User.DashboardAccessScopes.CAREER,
+        )
+        self.client.force_login(career_user)
+
+        self.assertEqual(self.client.get(reverse("dashboard:home")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("dashboard:about")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("dashboard:competency")).status_code, 200)
         self.assertEqual(self.client.get(reverse("dashboard:career")).status_code, 200)
         self.assertEqual(self.client.get(reverse("dashboard:profile")).status_code, 200)
         self.assertEqual(self.client.get(reverse("dashboard:academic")).status_code, 403)
         self.assertEqual(self.client.get(reverse("dashboard:aspiration-list")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("dashboard:ticket-tracking")).status_code, 403)
         self.assertEqual(self.client.get(reverse("dashboard:advocacy-resources")).status_code, 403)
 
     def test_lomba_agenda_uses_default_cari_tim_link_when_team_finding_link_is_empty(self):
@@ -122,6 +139,22 @@ class DashboardAccessTests(TestCase):
         configuration = AcademicDigitalResourceConfiguration.objects.get()
         self.assertEqual(configuration.canva_pro_ekstensi, "https://example.com/canva-pro-ekstensi")
         self.assertEqual(configuration.gemini_advanced, "https://example.com/gemini-advanced")
+
+    def test_academic_repository_slot_accepts_non_google_link(self):
+        user = self.create_dashboard_user(username="akademik", scope=User.DashboardAccessScopes.ACADEMIC)
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse("dashboard:repository-slot-update", args=[RepositoryMaterial.Sections.AKUNTANSI, 1]),
+            {
+                "title": "Materi Akuntansi",
+                "google_drive_link": "https://example.com/materi-akuntansi",
+            },
+        )
+
+        self.assertRedirects(response, reverse("dashboard:academic"))
+        material = RepositoryMaterial.objects.get(section=RepositoryMaterial.Sections.AKUNTANSI, display_order=1)
+        self.assertEqual(material.google_drive_link, "https://example.com/materi-akuntansi")
 
     def test_advocacy_user_can_update_policy_resource_links(self):
         user = self.create_dashboard_user(username="advokasi", scope=User.DashboardAccessScopes.ADVOCACY)
@@ -188,36 +221,44 @@ class DashboardAccessTests(TestCase):
         self.assertRedirects(relogin_response, reverse("dashboard:home"))
 
     @override_settings(DEBUG=True)
-    def test_local_dashboard_bootstrap_creates_four_default_accounts(self):
+    def test_local_dashboard_bootstrap_creates_five_default_accounts(self):
         users = ensure_local_development_dashboard_users()
 
-        self.assertEqual(set(users), {"superadmin", "akademik", "kompetensi", "advokasi"})
+        self.assertEqual(set(users), {"superadmin", "akademik", "kompetensi", "karir", "advokasi"})
         self.assertTrue(users["superadmin"].is_superuser)
         self.assertEqual(users["akademik"].dashboard_access_scope, User.DashboardAccessScopes.ACADEMIC)
         self.assertEqual(users["kompetensi"].dashboard_access_scope, User.DashboardAccessScopes.COMPETENCY)
+        self.assertEqual(users["karir"].dashboard_access_scope, User.DashboardAccessScopes.CAREER)
         self.assertEqual(users["advokasi"].dashboard_access_scope, User.DashboardAccessScopes.ADVOCACY)
-        self.assertIn("career", users["kompetensi"].dashboard_allowed_sections)
+        self.assertIn("competency", users["akademik"].dashboard_allowed_sections)
+        self.assertNotIn("career", users["akademik"].dashboard_allowed_sections)
+        self.assertNotIn("career", users["kompetensi"].dashboard_allowed_sections)
+        self.assertEqual(
+            users["karir"].dashboard_allowed_sections,
+            ("dashboard", "about", "competency", "career", "profile"),
+        )
         self.assertTrue(users["kompetensi"].check_password(LOCAL_DASHBOARD_PASSWORD))
 
     @override_settings(DEBUG=True)
-    def test_local_dashboard_bootstrap_deactivates_legacy_career_account(self):
-        legacy_career_user = User.objects.create_user(
+    def test_local_dashboard_bootstrap_reactivates_career_account(self):
+        career_user = User.objects.create_user(
             email="karir@extensipedia.local",
             dashboard_username="karir",
             full_name="Admin Karir",
             password=LOCAL_DASHBOARD_PASSWORD,
-            is_staff=True,
-            dashboard_access_scope="career",
+            is_staff=False,
+            is_active=False,
+            dashboard_access_scope=User.DashboardAccessScopes.COMPETENCY,
         )
 
         users = ensure_local_development_dashboard_users()
 
-        self.assertNotIn("karir", users)
-        legacy_career_user.refresh_from_db()
-        self.assertFalse(legacy_career_user.is_active)
-        self.assertFalse(legacy_career_user.is_staff)
-        self.assertFalse(legacy_career_user.is_superuser)
-        self.assertEqual(legacy_career_user.dashboard_access_scope, User.DashboardAccessScopes.COMPETENCY)
+        self.assertIn("karir", users)
+        career_user.refresh_from_db()
+        self.assertTrue(career_user.is_active)
+        self.assertTrue(career_user.is_staff)
+        self.assertFalse(career_user.is_superuser)
+        self.assertEqual(career_user.dashboard_access_scope, User.DashboardAccessScopes.CAREER)
 
     @override_settings(DEBUG=True)
     def test_local_dashboard_bootstrap_does_not_reset_profile_credentials(self):

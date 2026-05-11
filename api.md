@@ -409,7 +409,12 @@ secondary_button_label, secondary_button_url
 `tentang-kami`:
 
 ```txt
-id, title, subtitle, description, image
+id, title, subtitle, description, image,
+extensipedia_link, study_boost_exam_blast_link, fun_enlightenment_link,
+career_catalyst_link, explore_link, business_partnership_link,
+jaring_aspirasi_link, kajian_strategis_link, bincang_sekma_link,
+reach_project_link, talent_interest_link, branding_dokumentasi_link,
+program_detail_links
 ```
 
 `cabinet-calendar`:
@@ -423,7 +428,8 @@ Catatan:
 - `embed_url` public berasal dari `sanitized_embed_url`.
 - `provider` bisa `google_calendar`, `youtube`, `vimeo`, `google`, atau `external`.
 - Jika frontend hanya butuh URL aman untuk iframe, prioritaskan `embed_url`; `embed_code` lebih cocok dipakai untuk kebutuhan preview/admin.
-- `AboutSection` punya endpoint public, tetapi belum punya admin API khusus.
+- `program_detail_links` mengelompokkan 12 link detail program menjadi 4 tab, masing-masing 3 link.
+- `AboutSection` punya endpoint public dan Admin API singleton untuk update langsung tanpa delete.
 
 `profiles`:
 
@@ -465,7 +471,7 @@ Catatan:
     {
       "id": "uuid",
       "title": "Materi Akuntansi",
-      "google_drive_link": "https://drive.google.com/...",
+      "google_drive_link": "https://example.com/resource",
       "display_order": 1
     }
   ],
@@ -502,13 +508,15 @@ id, title, slug, description, poster, starts_at, ends_at
 
 ```txt
 id, title, short_description, urgency_tag, recommendation_tag,
-category_tag, scope_tag, pricing_tag, deadline_date,
+header_image_url, category_tag, scope_tag, pricing_tag, deadline_date,
 registration_link, team_finding_link, google_calendar_link, countdown_days
 ```
 
 Catatan:
 
 - `countdown_days` dihitung backend dari `deadline_date`.
+- `header_image_url` berisi URL gambar header card jika admin mengunggah gambar.
+- Validasi gambar header hanya membatasi format JPG/PNG/WebP dan ukuran maksimal 1 MB. Rasio 16:9 atau mendekati 1.85:1, ukuran 1200 x 650 px, minimum 800 x 450 px, dan orientasi landscape hanya panduan untuk admin.
 - `category_tag`: `workshop` atau `lomba`.
 - `scope_tag`: `nasional` atau `internasional`.
 - `pricing_tag`: `berbayar` atau `tidak berbayar`.
@@ -535,6 +543,11 @@ Catatan:
 id, cv_templates, cover_letter, portfolio_guide,
 salary_script, case_study_interview_prep
 ```
+
+Catatan label admin:
+
+- `portfolio_guide` tampil sebagai `Job interview prep`.
+- `salary_script` tampil sebagai `Compensation & benefit research`.
 
 `opportunities`:
 
@@ -707,6 +720,8 @@ Gunakan Swagger/ReDoc untuk melihat required field lengkap saat membuat form adm
 | About | GET/PUT/PATCH/DELETE | `/api/v1/admin/about/leadership/{id}/` | CRUD leadership |
 | About | GET/POST | `/api/v1/admin/about/heroes/` | CRUD hero |
 | About | GET/PUT/PATCH/DELETE | `/api/v1/admin/about/heroes/{id}/` | CRUD hero |
+| About | GET | `/api/v1/admin/about/tentang-kami/` | Singleton |
+| About | PUT/PATCH | `/api/v1/admin/about/tentang-kami/` | Create/update singleton |
 | About | GET | `/api/v1/admin/about/cabinet-calendar/` | Singleton |
 | About | PUT/PATCH | `/api/v1/admin/about/cabinet-calendar/` | Create/update singleton |
 | Academic | GET/POST | `/api/v1/admin/academic/services/` | CRUD academic service |
@@ -798,9 +813,10 @@ Accounts:
 About:
 
 - `hero` adalah single-active configuration.
+- `tentang-kami` adalah single-active configuration dan menyimpan 12 link detail program unggulan.
 - `cabinet-calendar` adalah singleton dan hanya memakai `GET`, `PUT`, `PATCH`.
 - `cabinet-calendar.embed_url` public memakai versi sanitasi.
-- `AboutSection` belum memiliki Admin API khusus, walaupun public endpoint tersedia.
+- Dashboard HTML menyediakan update langsung untuk `tentang-kami` dan `cabinet-calendar`.
 
 Academic:
 
@@ -815,6 +831,7 @@ Competency:
 
 - Agenda cards maksimum `15` record.
 - `short_description` agenda card maksimum `300` karakter.
+- `header_image` agenda card optional. Backend hanya memvalidasi format JPG/PNG/WebP dan ukuran maksimal 1 MB; rasio, ukuran minimum, dan orientasi hanya panduan admin.
 - `category_tag`: `workshop` atau `lomba`.
 - `scope_tag`: `nasional` atau `internasional`.
 - `pricing_tag`: `berbayar` atau `tidak berbayar`.
@@ -826,6 +843,7 @@ Career:
 
 - Career resources adalah single-active configuration.
 - Public `/career/resources/` mengambil konfigurasi aktif.
+- Field `portfolio_guide` dan `salary_script` tetap dipertahankan untuk kompatibilitas API, tetapi label adminnya adalah `Job interview prep` dan `Compensation & benefit research`.
 
 Advocacy:
 

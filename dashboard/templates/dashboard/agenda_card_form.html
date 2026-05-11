@@ -34,6 +34,25 @@
                     {% if form.short_description.help_text %}<div class="form-text">{{ form.short_description.help_text }}</div>{% endif %}
                     {% for error in form.short_description.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                 </div>
+                <div class="col-12">
+                    <label class="form-label" for="{{ form.header_image.id_for_label }}">{{ form.header_image.label }}</label>
+                    {{ form.header_image }}
+                    <div class="form-text">
+                        <div class="mb-1">Validasi upload hanya membatasi format JPG / PNG / WebP dan ukuran maksimal 1 MB. Panduan tampilan:</div>
+                        <ul class="mb-0 ps-3">
+                            <li>Rasio gambar: 16:9 atau mendekati 1.85:1</li>
+                            <li>Ukuran disarankan: 1200 x 650 px</li>
+                            <li>Ukuran minimum: 800 x 450 px</li>
+                            <li>Orientasi: landscape</li>
+                            <li>Format: JPG / PNG / WebP</li>
+                            <li>Ukuran file ideal: maksimal 1 MB</li>
+                        </ul>
+                    </div>
+                    {% if form.instance.header_image %}
+                        <img src="{{ form.instance.header_image.url }}" alt="{{ form.instance.title }}" class="img-fluid rounded mt-3 border" style="max-height: 180px; object-fit: cover; width: 100%;">
+                    {% endif %}
+                    {% for error in form.header_image.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
             </div>
         </div>
 

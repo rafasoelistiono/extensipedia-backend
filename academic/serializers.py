@@ -9,7 +9,7 @@ from academic.models import (
     YouTubeSection,
 )
 from core.serializers import BaseModelSerializer
-from core.validators import validate_google_drive_url, validate_iframe_or_embed_input
+from core.validators import validate_iframe_or_embed_input
 
 
 class AcademicServiceSerializer(BaseModelSerializer):
@@ -81,10 +81,6 @@ class RepositoryMaterialAdminSerializer(BaseModelSerializer):
 
     def validate(self, attrs):
         section = attrs.get("section") or getattr(self.instance, "section", None)
-        google_drive_link = attrs.get("google_drive_link") or getattr(self.instance, "google_drive_link", None)
-
-        if google_drive_link:
-            validate_google_drive_url(google_drive_link)
 
         queryset = RepositoryMaterial.objects.filter(section=section)
         if self.instance:

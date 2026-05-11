@@ -1,6 +1,13 @@
 from rest_framework import serializers
 
-from about.models import AboutSection, CabinetCalendar, HeroSection, LeadershipMember, OrganizationProfile
+from about.models import (
+    ABOUT_PROGRAM_LINK_GROUPS,
+    AboutSection,
+    CabinetCalendar,
+    HeroSection,
+    LeadershipMember,
+    OrganizationProfile,
+)
 from core.serializers import BaseModelSerializer
 from core.validators import validate_iframe_or_embed_input
 
@@ -76,10 +83,48 @@ class PublicHeroSectionSerializer(serializers.ModelSerializer):
 
 
 class PublicAboutSectionSerializer(serializers.ModelSerializer):
+    program_detail_links = serializers.SerializerMethodField()
+
     class Meta:
         model = AboutSection
-        fields = ("id", "title", "subtitle", "description", "image")
+        fields = (
+            "id",
+            "title",
+            "subtitle",
+            "description",
+            "image",
+            "extensipedia_link",
+            "study_boost_exam_blast_link",
+            "fun_enlightenment_link",
+            "career_catalyst_link",
+            "explore_link",
+            "business_partnership_link",
+            "jaring_aspirasi_link",
+            "kajian_strategis_link",
+            "bincang_sekma_link",
+            "reach_project_link",
+            "talent_interest_link",
+            "branding_dokumentasi_link",
+            "program_detail_links",
+        )
         read_only_fields = fields
+
+    def get_program_detail_links(self, obj):
+        return [
+            {
+                "key": group_key,
+                "label": group_label,
+                "links": [
+                    {
+                        "key": field_name,
+                        "label": item_label,
+                        "url": getattr(obj, field_name, ""),
+                    }
+                    for field_name, item_label in items
+                ],
+            }
+            for group_key, group_label, items in ABOUT_PROGRAM_LINK_GROUPS
+        ]
 
 
 class AdminCabinetCalendarSerializer(BaseModelSerializer):
