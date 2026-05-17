@@ -286,6 +286,7 @@ Throttle yang aktif:
 | Submit aspiration | `2/min`, `10/hour` |
 | Upvote/vote aspiration | `30/min`, `300/hour` |
 | Ticket tracking | `60/min` |
+| Activity event | `120/min` |
 | Admin login | `5/min`, `20/hour` |
 
 ## 5. Cara Membaca Endpoint List
@@ -345,6 +346,7 @@ Public API tidak membutuhkan login.
 | Aspirations | POST | `/api/v1/public/aspirations/{id}/upvote/` | Object | - |
 | Aspirations | POST | `/api/v1/public/aspirations/{id}/vote/` | Object | - |
 | Tickets | GET | `/api/v1/public/tickets/track/` | Object | `ticket_id` |
+| Analytics | POST | `/api/v1/public/activity-events/` | Object | JSON body |
 | Analytics | GET | `/api/v1/public/analytics-dashboard/` | Object | - |
 
 ### Catatan struktur public API
@@ -352,7 +354,8 @@ Public API tidak membutuhkan login.
 - Prefix `/api/v1/public/accounts/` sudah disiapkan di routing, tetapi saat ini belum memiliki endpoint aktif.
 - Endpoint singleton aktif berikut akan mengembalikan `404` jika belum ada konfigurasi aktif: `/about/hero/`, `/about/tentang-kami/`, `/about/cabinet-calendar/`, `/academic/youtube/`, `/academic/digital-resources/`, `/career/resources/`, dan `/advocacy/policy-resources/`.
 - Endpoint list public hanya menampilkan record yang memang aktif/published.
-- Endpoint analytics public tidak mengembalikan angka statistik; endpoint ini hanya memberi tahu bahwa analytics penuh ada di Admin API.
+- Endpoint analytics dashboard public tidak mengembalikan angka statistik; endpoint ini hanya memberi tahu bahwa analytics penuh ada di Admin API.
+- Endpoint `/activity-events/` mencatat klik/aksi homepage ke counter analytics terpisah dari visitor harian dan voting aspirasi publik.
 
 ### Public filters and ordering
 
@@ -788,9 +791,11 @@ cards.status_counts.submitted
 cards.status_counts.investigating
 cards.status_counts.resolved
 cards.total_featured_aspirations
-cards.total_visitors_last_30_days
-charts.daily_visitors_last_30_days[]
+cards.total_activity_events_all_time
 ```
+
+`total_activity_events_all_time` dihitung dari request `POST /api/v1/public/activity-events/`.
+Data visitor 30 hari lama tidak lagi menjadi sumber angka card dashboard.
 
 `GET /api/v1/admin/dashboard/ticket-log/`:
 
@@ -968,6 +973,98 @@ const response = await apiFetch<{
 });
 ```
 
+### Frontend activity tracking
+
+Frontend public sebaiknya mengirim klik homepage ke proxy Next.js, bukan langsung ke Django:
+
+```txt
+FE click -> POST /api/activity-events -> POST {NEXT_PUBLIC_API_BASE_URL}/api/v1/public/activity-events/
+```
+
+Helper client dibuat fire-and-forget supaya aksi utama tombol tetap jalan:
+
+```ts
+type ActivityPayload = {
+  action_key: string;
+  label: string;
+  page_path?: string;
+  target_type: string;
+  target_id?: string | null;
+  target_url?: string | null;
+  metadata?: Record<string, unknown>;
+  idempotency_key?: string;
+};
+
+export function trackActivity(action: ActivityPayload) {
+  if (typeof window === "undefined") return;
+
+  const payload = {
+    ...action,
+    page_path: action.page_path ?? window.location.pathname,
+    metadata: action.metadata ?? {},
+  };
+
+  void fetch("/api/activity-events", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    keepalive: true,
+  }).catch(() => undefined);
+}
+```
+
+Contoh proxy route Next.js:
+
+```ts
+export async function POST(request: Request) {
+  const body = await request.text();
+
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/public/activity-events/`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    },
+  );
+
+  return new Response(await response.text(), {
+    status: response.status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+```
+
+Mapping `action_key` untuk homepage:
+
+| UI action | action_key | target_id |
+|---|---|---|
+| Akses Bahan Kuliah hero | `home.hero.access_academic` | `null` |
+| Info Kompetisi hero | `home.hero.info_competition` | `null` |
+| Akses Sekarang | `home.features.academic.access_now` | `null` |
+| Eksplorasi | `home.features.competency.explore` | `null` |
+| Lihat Resource | `home.features.career.view_resource` | `null` |
+| Sampaikan Aspirasi | `home.features.advocacy.submit_aspiration` | `null` |
+| Lihat Semua | `home.competency.view_all` | `null` |
+| Daftar Sekarang | `home.competency.register` | agenda id |
+| Cari Tim | `home.competency.find_team` | agenda id |
+| Kalender | `home.competency.add_calendar` | agenda id |
+| Like aspirasi | `home.aspiration.upvote` | aspiration id |
+| Dislike aspirasi | `home.aspiration.downvote` | aspiration id |
+| Lacak | `home.ticket.track` | `null` |
+| Lihat Form Aspirasi | `home.ticket.view_form` | `null` |
+
+Aturan integrasi FE:
+
+- `Button` component perlu meneruskan `onClick` untuk elemen `<a>` juga, bukan hanya `<button>`.
+- Link biasa seperti di `Features.tsx`, `CompetitionCard.tsx`, dan `TicketTracker.tsx` panggil `trackActivity({...})` di `onClick`.
+- Untuk tombol navigasi, panggil `trackActivity` lalu biarkan navigasi normal berjalan; jangan `await`.
+- Untuk tombol agenda kompetensi, isi `target_id` dengan agenda id.
+- Untuk like/dislike aspirasi, isi `target_id` dengan aspiration id.
+- Untuk Lacak Tiket, `metadata` boleh berisi `ticket_id`; backend menyimpan metadata sebagai analytics context, bukan sebagai count public.
+- Untuk like/dislike aspirasi, panggil `trackActivity` setelah POST vote/upvote sukses. Jangan panggil dua kali jika di masa depan endpoint vote/upvote Django dibuat otomatis mencatat activity analytics.
+- Payload minimal FE: `action_key`, `label`, `page_path`, `target_type`, `target_id`, `target_url`, `metadata`.
+
 ### Login dan panggil admin endpoint
 
 ```ts
@@ -1032,6 +1129,10 @@ Analytics:
 - Endpoint `/api/v1/public/tickets/` tidak dihitung.
 - Deduplikasi visitor memakai cache process-local.
 - Pada deployment multi-worker, gunakan cache terpusat seperti Redis jika butuh angka visitor yang lebih stabil.
+- `POST /api/v1/public/activity-events/` menerima `action_key`, `label`, `page_path`, `target_type`, `target_id`, `target_url`, `metadata`, dan optional `idempotency_key`.
+- Activity events menyimpan session key, hash user/IP, user agent, metadata, dan counter agregat per `action_key`.
+- `idempotency_key` mencegah double count untuk `action_key` yang sama saat terjadi double click atau retry.
+- Count activity event tidak mengubah `upvote_count` atau `vote_count` aspirasi.
 - Endpoint public `/api/v1/public/analytics-dashboard/` bukan sumber data analytics; endpoint itu hanya mengembalikan `{ "available": false }`.
 
 Security:

@@ -176,6 +176,7 @@ REST_FRAMEWORK = {
         "aspiration_interaction_burst": "30/min",
         "aspiration_interaction_sustained": "300/hour",
         "ticket_tracking": "60/min",
+        "activity_event": "120/min",
         "admin_login_burst": "5/min",
         "admin_login_sustained": "20/hour",
     },

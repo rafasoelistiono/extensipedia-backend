@@ -10,6 +10,7 @@ from advocacy.urls import admin_urlpatterns as advocacy_admin_urlpatterns
 from advocacy.urls import public_urlpatterns as advocacy_public_urlpatterns
 from analytics_dashboard.urls import admin_urlpatterns as analytics_admin_urlpatterns
 from analytics_dashboard.urls import public_urlpatterns as analytics_public_urlpatterns
+from analytics_dashboard.views import PublicActivityEventView
 from aspirations.urls import admin_urlpatterns as aspirations_admin_urlpatterns
 from aspirations.urls import public_urlpatterns as aspirations_public_urlpatterns
 from aspirations.ticket_public_urls import urlpatterns as tickets_public_urlpatterns
@@ -37,6 +38,7 @@ urlpatterns = [
         include((aspirations_public_urlpatterns, "aspirations"), namespace="public-aspirations"),
     ),
     path("public/tickets/", include((tickets_public_urlpatterns, "tickets"), namespace="public-tickets")),
+    path("public/activity-events/", PublicActivityEventView.as_view(), name="public-activity-events"),
     path(
         "public/analytics-dashboard/",
         include((analytics_public_urlpatterns, "analytics_dashboard"), namespace="public-analytics-dashboard"),

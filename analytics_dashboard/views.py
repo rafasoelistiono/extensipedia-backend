@@ -4,10 +4,13 @@ from rest_framework.views import APIView
 from accounts.permissions import IsAdminPanelUser
 from analytics_dashboard.serializers import (
     DashboardSummarySerializer,
+    PublicActivityEventResultSerializer,
+    PublicActivityEventSerializer,
     PublicAnalyticsInfoSerializer,
     TicketLogItemSerializer,
 )
-from analytics_dashboard.services import build_dashboard_summary, build_recent_ticket_log
+from analytics_dashboard.services import build_dashboard_summary, build_recent_ticket_log, record_public_activity_event
+from analytics_dashboard.throttles import PublicActivityEventThrottle
 from core.responses import success_response
 
 
@@ -20,6 +23,19 @@ class PublicAnalyticsInfoView(APIView):
             {"available": False},
             message="Analytics dashboard is only available in the admin API",
         )
+
+
+class PublicActivityEventView(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [PublicActivityEventThrottle]
+    serializer_class = PublicActivityEventSerializer
+
+    def post(self, request):
+        serializer = PublicActivityEventSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        payload = record_public_activity_event(serializer.validated_data, request)
+        result_serializer = PublicActivityEventResultSerializer(payload)
+        return success_response(result_serializer.data, message="Activity recorded")
 
 
 class DashboardSummaryView(APIView):

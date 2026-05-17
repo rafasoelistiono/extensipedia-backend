@@ -131,7 +131,6 @@ class DashboardHomeView(DashboardPageMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         summary = build_dashboard_summary()
         context["summary"] = summary["cards"]
-        context["daily_visitors"] = summary["charts"]["daily_visitors_last_30_days"]
         context["recent_logs"] = build_recent_ticket_log(limit=10)
         quick_links = [
             {"title": "Tentang Kami", "url": reverse("dashboard:about"), "description": "Kelola kalender kabinet."},

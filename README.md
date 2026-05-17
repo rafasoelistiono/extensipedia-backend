@@ -239,7 +239,9 @@ Data demo ini berguna untuk:
 - featured aspirations
 - career resources
 - agenda kompetensi
-- visitor analytics 30 hari untuk dashboard
+- activity event analytics all-time untuk dashboard
+
+Catatan integrasi FE untuk activity tracking homepage ada di [api.md](c:/projek/extensipedia-backend/api.md) bagian "Frontend activity tracking".
 
 ## Troubleshooting Singkat
 
