@@ -21,12 +21,12 @@
         {% endif %}
         {% if 'competency' in allowed_dashboard_sections or 'career' in allowed_dashboard_sections %}
             <div class="sidebar-group {% if sidebar_section == 'competency-career' %}open{% endif %}">
-                <div class="sidebar-group-title">Kompetensi &amp; Karir</div>
+                <div class="sidebar-group-title">Kompetensi &amp; Karier</div>
                 {% if 'competency' in allowed_dashboard_sections %}
                     <a class="sidebar-sublink {% if sidebar_subsection == 'competency' %}active{% endif %}" href="{% url 'dashboard:competency' %}">Kompetensi</a>
                 {% endif %}
                 {% if 'career' in allowed_dashboard_sections %}
-                    <a class="sidebar-sublink {% if sidebar_subsection == 'career' %}active{% endif %}" href="{% url 'dashboard:career' %}">Karir</a>
+                    <a class="sidebar-sublink {% if sidebar_subsection == 'career' %}active{% endif %}" href="{% url 'dashboard:career' %}">Karier</a>
                 {% endif %}
             </div>
         {% endif %}
