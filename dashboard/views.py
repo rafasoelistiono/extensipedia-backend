@@ -136,7 +136,7 @@ class DashboardHomeView(DashboardPageMixin, TemplateView):
             {"title": "Tentang Kami", "url": reverse("dashboard:about"), "description": "Kelola kalender kabinet."},
             {"title": "Akademik", "url": reverse("dashboard:academic"), "description": "Kelola quick downloads, repo, YouTube, dan countdown."},
             {"title": "Kompetensi", "url": reverse("dashboard:competency"), "description": "Kelola agenda cards kompetensi."},
-            {"title": "Karir", "url": reverse("dashboard:career"), "description": "Kelola resource link karir."},
+            {"title": "Karier", "url": reverse("dashboard:career"), "description": "Kelola resource link karier."},
             {"title": "Aspirasi", "url": reverse("dashboard:aspiration-list"), "description": "Moderasi aspirasi dan featured items."},
             {"title": "Lacak Tiket", "url": reverse("dashboard:ticket-tracking"), "description": "Cari tiket dan monitor progres."},
             {
@@ -150,7 +150,7 @@ class DashboardHomeView(DashboardPageMixin, TemplateView):
             "Tentang Kami": "about",
             "Akademik": "academic",
             "Kompetensi": "competency",
-            "Karir": "career",
+            "Karier": "career",
             "Aspirasi": "aspirations",
             "Lacak Tiket": "tickets",
             "Advokasi & Literasi Kebijakan": "advocacy_resources",
@@ -597,7 +597,7 @@ class CompetencyPageView(DashboardPageMixin, ListView):
     sidebar_subsection = "competency"
 
     def get_breadcrumbs(self):
-        return [("Kompetensi & Karir", None), ("Kompetensi", None)]
+        return [("Kompetensi & Karier", None), ("Kompetensi", None)]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -618,7 +618,7 @@ class AgendaCardCreateView(DashboardObjectFormMixin, CreateView):
     success_message = "Agenda kompetensi berhasil ditambahkan."
 
     def get_breadcrumbs(self):
-        return [("Kompetensi & Karir", None), ("Kompetensi", reverse("dashboard:competency")), ("Tambah Agenda", None)]
+        return [("Kompetensi & Karier", None), ("Kompetensi", reverse("dashboard:competency")), ("Tambah Agenda", None)]
 
 
 class AgendaCardUpdateView(DashboardObjectFormMixin, UpdateView):
@@ -634,7 +634,7 @@ class AgendaCardUpdateView(DashboardObjectFormMixin, UpdateView):
     success_message = "Agenda kompetensi berhasil diperbarui."
 
     def get_breadcrumbs(self):
-        return [("Kompetensi & Karir", None), ("Kompetensi", reverse("dashboard:competency")), ("Edit Agenda", None)]
+        return [("Kompetensi & Karier", None), ("Kompetensi", reverse("dashboard:competency")), ("Edit Agenda", None)]
 
 
 class AgendaCardDeleteView(DashboardDeleteView):
@@ -648,7 +648,7 @@ class AgendaCardDeleteView(DashboardDeleteView):
     success_message = "Agenda kompetensi berhasil dihapus."
 
     def get_breadcrumbs(self):
-        return [("Kompetensi & Karir", None), ("Kompetensi", reverse("dashboard:competency")), ("Hapus Agenda", None)]
+        return [("Kompetensi & Karier", None), ("Kompetensi", reverse("dashboard:competency")), ("Hapus Agenda", None)]
 
 
 class CompetencyWinnerSlideUpdateView(DashboardPageMixin, FormView):
@@ -691,7 +691,7 @@ class CompetencyWinnerSlideUpdateView(DashboardPageMixin, FormView):
         return context
 
     def get_breadcrumbs(self):
-        return [("Kompetensi & Karir", None), ("Kompetensi", reverse("dashboard:competency")), ("Update Winner Slide", None)]
+        return [("Kompetensi & Karier", None), ("Kompetensi", reverse("dashboard:competency")), ("Update Winner Slide", None)]
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
@@ -706,13 +706,13 @@ class CompetencyWinnerSlideUpdateView(DashboardPageMixin, FormView):
 
 class CareerSettingsView(DashboardPageMixin, TemplateView):
     template_name = "dashboard/career_page.html"
-    page_title = "Karir"
-    page_description = "Kelola resource links tetap untuk section karir."
+    page_title = "Karier"
+    page_description = "Kelola resource links tetap untuk section karier."
     sidebar_section = "competency-career"
     sidebar_subsection = "career"
 
     def get_breadcrumbs(self):
-        return [("Kompetensi & Karir", None), ("Karir", None)]
+        return [("Kompetensi & Karier", None), ("Karier", None)]
 
     def get_instance(self):
         return get_singleton_instance(CareerResourceConfiguration, defaults={"is_active": True})
@@ -733,9 +733,9 @@ class CareerSettingsView(DashboardPageMixin, TemplateView):
             configuration.is_active = True
             apply_audit_fields(configuration, request.user)
             configuration.save()
-            messages.success(request, "Resource karir berhasil diperbarui.")
+            messages.success(request, "Resource karier berhasil diperbarui.")
             return redirect("dashboard:career")
-        messages.error(request, "Periksa kembali form resource karir.")
+        messages.error(request, "Periksa kembali form resource karier.")
         return self.render_to_response(self.get_context_data(form=form))
 
 
