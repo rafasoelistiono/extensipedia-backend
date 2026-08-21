@@ -22,7 +22,7 @@ ABOUT_PROGRAM_LINK_GROUPS = (
     ),
     (
         "karir_bisnis_relasi",
-        "Karir, Bisnis & Relasi",
+        "Karier, Bisnis & Relasi",
         (
             ("career_catalyst_link", "Career Catalyst"),
             ("explore_link", "EXPLORE"),
